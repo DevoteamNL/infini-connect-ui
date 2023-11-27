@@ -1,12 +1,7 @@
-import React from 'react';
-
-import ChatHistoryDrawer  from "./components/ChatList/ChatHistoryDrawer";
-
+import ChatHistoryDrawer from "./components/ChatList/ChatHistoryDrawer";
 
 function App() {
-  return (
-        <ChatHistoryDrawer />
-  );
+  return <ChatHistoryDrawer />;
 }
 
 export default App;

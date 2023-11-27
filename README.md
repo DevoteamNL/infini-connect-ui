@@ -45,20 +45,25 @@ seamless user experience for interacting with various AI-driven chat plugins.
    ```
 
 ## Usage
+
 After starting the app, select a chat from the left-hand panel to view it in the right panel. For new chats, use the multi-select box to choose relevant plugins.
 
 ## Contributing
+
 Contributions are welcome! Please read our contributing guidelines and submit your pull requests.
 
 ## License
+
 Distributed under the MIT License. See LICENSE for more information.
 
 ## Contact
+
 Your Name - hardik.patel@devoteam.com
 
 Project Link: https://github.com/orgs/DevoteamNL/projects/61
 
 ## Acknowledgments
+
 - Material UI
 - React
 - TypeScript
