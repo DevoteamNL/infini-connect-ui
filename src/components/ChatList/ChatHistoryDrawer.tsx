@@ -1,4 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
+import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Fab } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
@@ -14,11 +15,12 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import * as React from "react";
+import { AuthContext } from "../../context/AuthContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 
 const drawerWidth = 300;
 const pages = ["Typescript developers", "CKA expert", "Book desk"];
-const settings = ["Profile", "Account", "Dashboard", "Logout"];
+const settings = ["Profile", "Account", "Dashboard"];
 
 interface Props {
   /**
@@ -29,6 +31,7 @@ interface Props {
 }
 
 export default function ChatHistoryDrawer(props: Props) {
+  const { logout } = React.useContext(AuthContext);
   const [selectedPage, setSelectedPage] = React.useState<string>("");
   // const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
   //   null,
@@ -84,6 +87,14 @@ export default function ChatHistoryDrawer(props: Props) {
               </ListItemButton>
             </ListItem>
           ))}
+          <ListItem key="Logout" disablePadding>
+            <ListItemButton onClick={logout}>
+              <ListItemIcon>
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText primary="Logout" />
+            </ListItemButton>
+          </ListItem>
         </List>
       </Box>
     </Box>
