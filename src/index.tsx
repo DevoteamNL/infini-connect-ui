@@ -1,8 +1,10 @@
 import { ThemeProvider } from "@mui/material";
 import { StyledEngineProvider } from "@mui/material/styles";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { AuthContextProvider } from "./context/AuthContext";
 import devoteamTheme from "./themes/devoteamTheme";
 
 const root = ReactDOM.createRoot(
@@ -12,9 +14,11 @@ root.render(
   <React.StrictMode>
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={devoteamTheme}>
-        {" "}
-        {/* Apply the theme */}
-        <App />
+        <GoogleOAuthProvider clientId="779787791084-sf0tjf22s5cl3odf9sjg6rch0if9c0qq.apps.googleusercontent.com">
+          <AuthContextProvider>
+            <App />
+          </AuthContextProvider>
+        </GoogleOAuthProvider>
       </ThemeProvider>
     </StyledEngineProvider>
   </React.StrictMode>,
