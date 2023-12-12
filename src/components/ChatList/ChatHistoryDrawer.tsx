@@ -16,10 +16,10 @@ import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import * as React from "react";
 import { AuthContext } from "../../context/AuthContext";
+import { Thread, useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 
 const drawerWidth = 300;
-const pages = ["Typescript developers", "CKA expert", "Book desk"];
 const settings = ["Profile", "Account", "Dashboard"];
 
 interface Props {
@@ -32,7 +32,10 @@ interface Props {
 
 export default function ChatHistoryDrawer(props: Props) {
   const { logout } = React.useContext(AuthContext);
-  const [selectedPage, setSelectedPage] = React.useState<string>("");
+  const { threads, listThreads, createThread } = useThreadContext();
+  const [selectedThread, setSelectedThread] = React.useState<Thread>(
+    threads[0],
+  );
   // const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
   //   null,
   // );
@@ -45,6 +48,10 @@ export default function ChatHistoryDrawer(props: Props) {
   //   setAnchorElUser(null);
   // };
 
+  React.useEffect(() => {
+    listThreads();
+  }, [listThreads]);
+
   const drawer = (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Box sx={{ overflowY: "auto", flexGrow: 1 }}>
@@ -53,20 +60,29 @@ export default function ChatHistoryDrawer(props: Props) {
         </Toolbar>
         <Divider />
         <Box sx={{ p: 2 }}>
-          <Fab variant="extended" color="primary">
+          <Fab
+            variant="extended"
+            color="primary"
+            onClick={() =>
+              createThread({
+                title: "New Chat",
+                message: "Hello, how can I help you?",
+              })
+            }
+          >
             <AddIcon sx={{ mr: 1 }} />
             New Chat
           </Fab>
         </Box>
         <Divider />
         <List>
-          {pages.map((text, index) => (
-            <ListItem key={text} disablePadding>
-              <ListItemButton onClick={() => setSelectedPage(text)}>
+          {threads.map((thread, index) => (
+            <ListItem key={thread.id} disablePadding>
+              <ListItemButton onClick={() => setSelectedThread(thread)}>
                 {/*<ListItemIcon>
                                     {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
                                 </ListItemIcon>*/}
-                <ListItemText primary={text} />
+                <ListItemText primary={thread.title} />
               </ListItemButton>
             </ListItem>
           ))}
@@ -159,7 +175,7 @@ export default function ChatHistoryDrawer(props: Props) {
           {drawer}
         </Drawer>
       </Box>
-      <ChatWindow selectedPage={selectedPage} />
+      <ChatWindow thread={selectedThread} />
     </Box>
   );
 }

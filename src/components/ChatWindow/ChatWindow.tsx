@@ -9,88 +9,21 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
+import { Thread, useThreadContext } from "../../context/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
-
-// Define the ChatMessage interface for type safety
-interface ChatMessage {
-  sender: "user" | "other";
-  text: string;
-  timestamp: string;
-}
 
 // Define the MainContentProps interface for the component's props
 interface MainContentProps {
-  selectedPage: string;
+  thread?: Thread;
 }
 
 // MainContent component
-const MainContent: React.FC<MainContentProps> = ({ selectedPage }) => {
-  // Create some mock data for the chat messages
-  const mockData: ChatMessage[] = [
-    {
-      sender: "other",
-      text: "Hello, how can I help you?",
-      timestamp: new Date().toLocaleTimeString(),
-    },
-    {
-      sender: "user",
-      text: "Who is Typescript expert?",
-      timestamp: new Date().toLocaleTimeString(),
-    },
-    // {
-    //     sender: 'other',
-    //     text: "Sure, TypeScript is a typed superset of JavaScript.",
-    //     timestamp: new Date().toLocaleTimeString()
-    // }, {
-    //     sender: 'other',
-    //     text: 'Hello, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help you?',
-    //     timestamp: new Date().toLocaleTimeString()
-    // },
-    // {
-    //     sender: 'user',
-    //     text: "I'm looking sdfsdf informationinformatiosdfsfds  sdf sdfsfsdf          sdfsdfsdf             sdfsfninformationinformationinformationinformation oking sdfsdf informationinformatiosdfsfds  sdf sdfsfsdf          sdfsdfsdf             sdfsfninformationinformationinformationinformation on TypeScript.",
-    //     timestamp: new Date().toLocaleTimeString()
-    // },
-    // {
-    //     sender: 'other',
-    //     text: "Sure, TypeScript is a typed superset of JavaScript.",
-    //     timestamp: new Date().toLocaleTimeString()
-    // },
-    // {
-    //     sender: 'other',
-    //     text: 'Hello, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help you?',
-    //     timestamp: new Date().toLocaleTimeString()
-    // },
-    // {
-    //     sender: 'user',
-    //     text: "I'm looking sdfsdf informationinformatiosdfsfds  sdf sdfsfsdf          sdfsdfsdf             sdfsfninformationinformationinformationinformation oking sdfsdf informationinformatiosdfsfds  sdf sdfsfsdf          sdfsdfsdf             sdfsfninformationinformationinformationinformation on TypeScript.",
-    //     timestamp: new Date().toLocaleTimeString()
-    // },
-    // {
-    //     sender: 'other',
-    //     text: "Sure, TypeScript is a typed superset of JavaScript.",
-    //     timestamp: new Date().toLocaleTimeString()
-    // }, {
-    //     sender: 'other',
-    //     text: 'Hello, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help, how can I help you?',
-    //     timestamp: new Date().toLocaleTimeString()
-    // },
-    // {
-    //     sender: 'user',
-    //     text: "I'm looking sdfsdf informationinformatiosdfsfds  sdf sdfsfsdf          sdfsdfsdf             sdfsfninformationinformationinformationinformation oking sdfsdf informationinformatiosdfsfds  sdf sdfsfsdf          sdfsdfsdf             sdfsfninformationinformationinformationinformation on TypeScript.",
-    //     timestamp: new Date().toLocaleTimeString()
-    // },
-    // {
-    //     sender: 'other',
-    //     text: "Sure, TypeScript is a typed superset of JavaScript.",
-    //     timestamp: new Date().toLocaleTimeString()
-    // }
-  ];
-
-  // State for the chat message, chat history, and text field rows
+const MainContent: React.FC<MainContentProps> = ({ thread }) => {
+  const { postMessage, threads } = useThreadContext();
+  // State for the chat message and text field rows
   const [message, setMessage] = useState("");
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>(mockData);
   const [rows, setRows] = useState(3);
+  const messages = threads.find((t) => t.id === thread?.id)?.messages;
 
   // Ref for scrolling to the bottom of the chat
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -104,19 +37,12 @@ const MainContent: React.FC<MainContentProps> = ({ selectedPage }) => {
   // Effect for auto-scrolling to the latest message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatHistory]);
+  }, [messages]);
 
   // Function to handle sending a message
   const handleSendMessage = () => {
-    if (message) {
-      setChatHistory([
-        ...chatHistory,
-        {
-          sender: "user",
-          text: message,
-          timestamp: new Date().toLocaleTimeString(),
-        },
-      ]);
+    if (message && thread) {
+      postMessage(thread.id, message);
       setMessage("");
     }
   };
@@ -136,16 +62,16 @@ const MainContent: React.FC<MainContentProps> = ({ selectedPage }) => {
       <br />
       <br />
       <PluginSelector></PluginSelector>
-      <Typography paragraph>{selectedPage}</Typography>
+      <Typography paragraph>{thread?.title}</Typography>
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
         <List>
-          {chatHistory.map((msg, index) => (
+          {messages?.map((msg) => (
             <ListItem
-              key={index}
+              key={msg.id}
               sx={{
                 display: "flex",
                 justifyContent:
-                  msg.sender === "user" ? "flex-end" : "flex-start",
+                  msg.data.role === "user" ? "flex-end" : "flex-start",
               }}
             >
               <Paper
@@ -153,7 +79,7 @@ const MainContent: React.FC<MainContentProps> = ({ selectedPage }) => {
                   p: 1,
                   maxWidth: "70%",
                   bgcolor:
-                    msg.sender === "user"
+                    msg.data.role === "user"
                       ? "rgba(173, 216, 230, 0.5)"
                       : "rgba(211, 211, 211, 0.5)",
                   border: 1,
@@ -161,12 +87,12 @@ const MainContent: React.FC<MainContentProps> = ({ selectedPage }) => {
                   borderRadius: 2,
                 }}
               >
-                <Typography variant="body1">{msg.text}</Typography>
+                <Typography variant="body1">{msg.data.content}</Typography>
                 <Typography
                   variant="caption"
                   sx={{ display: "block", textAlign: "right" }}
                 >
-                  {msg.timestamp}
+                  {/* mock timestamp */ new Date().toLocaleTimeString()}
                 </Typography>
               </Paper>
             </ListItem>
