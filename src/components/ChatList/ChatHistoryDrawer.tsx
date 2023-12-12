@@ -15,7 +15,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import * as React from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuthContext } from "../../context/AuthContext";
 import { Thread, useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 
@@ -31,7 +31,7 @@ interface Props {
 }
 
 export default function ChatHistoryDrawer(props: Props) {
-  const { logout } = React.useContext(AuthContext);
+  const { logout } = useAuthContext();
   const { threads, listThreads, createThread } = useThreadContext();
   const [selectedThread, setSelectedThread] = React.useState<Thread>(
     threads[0],

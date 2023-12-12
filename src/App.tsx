@@ -1,10 +1,9 @@
-import { useContext } from "react";
 import ChatHistoryDrawer from "./components/ChatList/ChatHistoryDrawer";
 import SignIn from "./components/SignIn/SignIn";
-import { AuthContext } from "./context/AuthContext";
+import { useAuthContext } from "./context/AuthContext";
 import { ThreadProvider } from "./context/ThreadContext";
 function App() {
-  const { loggedIn } = useContext(AuthContext);
+  const { loggedIn } = useAuthContext();
 
   return loggedIn ? (
     <ThreadProvider>

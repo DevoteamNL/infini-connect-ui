@@ -6,7 +6,7 @@ import {
   useReducer,
   useState,
 } from "react";
-import { AuthContext } from "./AuthContext";
+import { useAuthContext } from "./AuthContext";
 
 // Define the thread context
 interface ThreadContextProps {
@@ -21,7 +21,7 @@ interface ThreadContextProps {
 }
 
 // Define the thread object
-export interface Thread {
+interface Thread {
   id: string;
   title: string;
   messages: {
@@ -109,7 +109,7 @@ const ThreadProvider = ({
   const [threads, dispatch] = useReducer(threadReducer, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { credential } = useContext(AuthContext);
+  const { credential } = useAuthContext();
 
   const authFetch = useCallback(
     async (url: string, options?: RequestInit) => {
@@ -270,4 +270,4 @@ const useThreadContext = () => {
   return context;
 };
 
-export { ThreadProvider, useThreadContext };
+export { ThreadProvider, useThreadContext, type Thread };

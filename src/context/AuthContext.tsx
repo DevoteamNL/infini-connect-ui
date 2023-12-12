@@ -1,22 +1,18 @@
 import { CredentialResponse } from "@react-oauth/google";
-import { createContext, ReactNode, useState } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 
 const oauthCookie = localStorage.getItem("oauth2-response");
 const parsedCookie: CredentialResponse | undefined =
   oauthCookie && JSON.parse(oauthCookie);
 
-export const AuthContext = createContext({
+const AuthContext = createContext({
   loggedIn: !!parsedCookie,
   login: (_: CredentialResponse) => {},
   logout: () => {},
   credential: parsedCookie,
 });
 
-export const AuthContextProvider = ({
-  children,
-}: {
-  children: ReactNode[] | ReactNode;
-}) => {
+const AuthProvider = ({ children }: { children: ReactNode[] | ReactNode }) => {
   const [loggedIn, setLoggedIn] = useState(!!parsedCookie);
   const [credential, setCredential] = useState<CredentialResponse | undefined>(
     parsedCookie,
@@ -43,3 +39,14 @@ export const AuthContextProvider = ({
     </AuthContext.Provider>
   );
 };
+
+// Custom hook to access the thread context
+const useAuthContext = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuthContext must be used within a AuthProvider");
+  }
+  return context;
+};
+
+export { AuthProvider, useAuthContext };
