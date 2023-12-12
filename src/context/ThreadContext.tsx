@@ -27,7 +27,7 @@ interface Thread {
   messages: {
     id: number;
     data: {
-      role: "user" | "other";
+      role: "user" | "assistant";
       content: string;
     };
   }[];
