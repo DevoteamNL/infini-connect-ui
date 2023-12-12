@@ -5,11 +5,10 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { GoogleLogin } from "@react-oauth/google";
-import * as React from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuthContext } from "../../context/AuthContext";
 
 const SignIn = () => {
-  const { login } = React.useContext(AuthContext);
+  const { login } = useAuthContext();
 
   return (
     <Stack
@@ -32,7 +31,7 @@ const SignIn = () => {
       </Typography>
 
       <Box flex={1}>
-        <GoogleLogin onSuccess={login} onError={console.error} useOneTap />
+        <GoogleLogin onSuccess={login} onError={console.error} />
       </Box>
 
       <img src="/static/images/devoteam_rgb.png" alt="logo" width="200px" />
