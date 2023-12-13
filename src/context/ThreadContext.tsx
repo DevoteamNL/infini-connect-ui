@@ -13,17 +13,24 @@ interface ThreadContextProps {
   threads: Thread[];
   loading: boolean;
   error: string;
+  selectedThreadId?: string;
   listThreads: () => Promise<void>;
   getThreadById: (id: string) => Promise<void>;
-  createThread: (thread: { title: string; message: string }) => Promise<void>;
+  createThread: () => Promise<void>;
   deleteThread: (id: string) => Promise<void>;
-  postMessage: (id: string, message: string) => Promise<void>;
+  postMessage: (
+    id: string,
+    message: string,
+    newThread?: boolean,
+  ) => Promise<void>;
+  setSelectedThread: (id: string) => void;
 }
 
 // Define the thread object
 interface Thread {
   id: string;
   title: string;
+  newThread?: boolean;
   messages: {
     id: number;
     data: {
@@ -41,7 +48,7 @@ type Action =
   | { type: "SET_ALL_LOADING"; payload: { loading: boolean } }
   | { type: "SET_LOADING"; payload: { id: string; loading: boolean } }
   | { type: "SET_ERROR"; payload: { id: string; error: string } }
-  | { type: "SET_THREAD_ID"; payload: { id: string; newId: string } }
+  | { type: "SET_THREAD"; payload: { id: string; thread: Thread } }
   | { type: "ADD_THREAD"; payload: Thread }
   | { type: "DELETE_THREAD"; payload: string }
   | {
@@ -68,10 +75,15 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
       );
     case "ADD_THREAD":
       return [...state, action.payload];
-    case "SET_THREAD_ID":
+    case "SET_THREAD":
       return state.map((thread) =>
         thread.id === action.payload.id
-          ? { ...thread, id: action.payload.newId, loading: false }
+          ? {
+              ...thread,
+              ...action.payload.thread,
+              loading: false,
+              newThread: false,
+            }
           : thread,
       );
     case "DELETE_THREAD":
@@ -109,6 +121,7 @@ const ThreadProvider = ({
   const [threads, dispatch] = useReducer(threadReducer, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedThread, setSelectedThread] = useState<string | undefined>();
   const { credential } = useAuthContext();
 
   const authFetch = useCallback(
@@ -159,42 +172,26 @@ const ThreadProvider = ({
   );
 
   // Create a new thread
-  const createThread = useCallback(
-    async (params: { title: string; message: string }) => {
-      const tempId = Math.random().toString(36).substring(7);
-      dispatch({
-        type: "ADD_THREAD",
-        payload: {
-          id: tempId,
-          title: params.title,
-          messages: [
-            { id: 1, data: { role: "user", content: params.message } },
-          ],
-          loading: true,
-          error: null,
-        },
-      });
-
-      try {
-        const response = await authFetch("http://localhost:8080/api/thread", {
-          method: "POST",
-          body: JSON.stringify(params),
-          headers: { "Content-Type": "application/json" },
-        });
-        const thread = await response.json();
-        dispatch({
-          type: "SET_THREAD_ID",
-          payload: { id: tempId, newId: thread.id },
-        });
-      } catch (error) {
-        dispatch({
-          type: "SET_ERROR",
-          payload: { id: tempId, error: "Failed to create thread" },
-        });
-      }
-    },
-    [authFetch],
-  );
+  const createThread = async () => {
+    const tempId = Math.random().toString(36).substring(7);
+    dispatch({
+      type: "ADD_THREAD",
+      payload: {
+        id: tempId,
+        title: "New Chat",
+        messages: [
+          {
+            id: 1,
+            data: { role: "assistant", content: "Hello, how can I help?" },
+          },
+        ],
+        loading: false,
+        error: null,
+        newThread: true,
+      },
+    });
+    setSelectedThread(tempId);
+  };
 
   // Delete a thread by ID
   const deleteThread = useCallback(
@@ -218,8 +215,30 @@ const ThreadProvider = ({
 
   // Post a message to a thread
   const postMessage = useCallback(
-    async (id: string, message: string) => {
+    async (id: string, message: string, newThread?: boolean) => {
       dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
+
+      if (newThread) {
+        try {
+          const response = await authFetch("http://localhost:8080/api/thread", {
+            method: "POST",
+            body: JSON.stringify({ title: message.substring(0, 20), message }),
+            headers: { "Content-Type": "application/json" },
+          });
+          const newThread = await response.json();
+          dispatch({
+            type: "SET_THREAD",
+            payload: { id: id, thread: newThread },
+          });
+          setSelectedThread(newThread.id);
+        } catch (error) {
+          dispatch({
+            type: "SET_ERROR",
+            payload: { id: id, error: "Failed to create thread" },
+          });
+        }
+        return;
+      }
 
       try {
         const response = await authFetch(
@@ -249,11 +268,13 @@ const ThreadProvider = ({
         threads,
         loading,
         error,
+        selectedThreadId: selectedThread,
         listThreads,
         getThreadById,
         createThread,
         deleteThread,
         postMessage,
+        setSelectedThread,
       }}
     >
       {children}
