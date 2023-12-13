@@ -18,12 +18,13 @@ interface MainContentProps {
 }
 
 // MainContent component
-const MainContent: React.FC<MainContentProps> = ({ thread }) => {
-  const { postMessage, threads } = useThreadContext();
+const MainContent: React.FC<MainContentProps> = () => {
+  const { postMessage, threads, selectedThreadId } = useThreadContext();
   // State for the chat message and text field rows
   const [message, setMessage] = useState("");
   const [rows, setRows] = useState(3);
-  const messages = threads.find((t) => t.id === thread?.id)?.messages;
+  const selectedThread = threads.find((t) => t.id === selectedThreadId);
+  const messages = selectedThread?.messages;
 
   // Ref for scrolling to the bottom of the chat
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -41,8 +42,8 @@ const MainContent: React.FC<MainContentProps> = ({ thread }) => {
 
   // Function to handle sending a message
   const handleSendMessage = () => {
-    if (message && thread) {
-      postMessage(thread.id, message);
+    if (message && selectedThread) {
+      postMessage(selectedThread.id, message, selectedThread.newThread);
       setMessage("");
     }
   };
@@ -62,7 +63,7 @@ const MainContent: React.FC<MainContentProps> = ({ thread }) => {
       <br />
       <br />
       <PluginSelector></PluginSelector>
-      <Typography paragraph>{thread?.title}</Typography>
+      <Typography paragraph>{selectedThread?.title}</Typography>
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
         <List>
           {messages?.map((msg) => (

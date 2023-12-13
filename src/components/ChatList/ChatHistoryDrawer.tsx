@@ -16,7 +16,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import * as React from "react";
 import { useAuthContext } from "../../context/AuthContext";
-import { Thread, useThreadContext } from "../../context/ThreadContext";
+import { useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 
 const drawerWidth = 300;
@@ -32,10 +32,8 @@ interface Props {
 
 export default function ChatHistoryDrawer(props: Props) {
   const { logout } = useAuthContext();
-  const { threads, listThreads, createThread } = useThreadContext();
-  const [selectedThread, setSelectedThread] = React.useState<Thread>(
-    threads[0],
-  );
+  const { threads, listThreads, createThread, setSelectedThread } =
+    useThreadContext();
   // const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
   //   null,
   // );
@@ -63,12 +61,7 @@ export default function ChatHistoryDrawer(props: Props) {
           <Fab
             variant="extended"
             color="primary"
-            onClick={() =>
-              createThread({
-                title: "New Chat",
-                message: "Hello, how can I help you?",
-              })
-            }
+            onClick={() => createThread()}
           >
             <AddIcon sx={{ mr: 1 }} />
             New Chat
@@ -78,7 +71,7 @@ export default function ChatHistoryDrawer(props: Props) {
         <List>
           {threads.map((thread, index) => (
             <ListItem key={thread.id} disablePadding>
-              <ListItemButton onClick={() => setSelectedThread(thread)}>
+              <ListItemButton onClick={() => setSelectedThread(thread.id)}>
                 {/*<ListItemIcon>
                                     {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
                                 </ListItemIcon>*/}
@@ -175,7 +168,7 @@ export default function ChatHistoryDrawer(props: Props) {
           {drawer}
         </Drawer>
       </Box>
-      <ChatWindow thread={selectedThread} />
+      <ChatWindow />
     </Box>
   );
 }
