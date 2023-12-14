@@ -91,7 +91,9 @@ const MainContent: React.FC<MainContentProps> = () => {
                   borderRadius: 2,
                 }}
               >
-                <Typography variant="body1">{msg.data.content}</Typography>
+                <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
+                  {msg.data.content}
+                </Typography>
                 <Typography
                   variant="caption"
                   sx={{ display: "block", textAlign: "right" }}
@@ -115,8 +117,10 @@ const MainContent: React.FC<MainContentProps> = () => {
           value={message}
           onKeyDown={(ev) => {
             if (ev.key === "Enter") {
-              handleSendMessage();
-              ev.preventDefault();
+              if (!ev.shiftKey) {
+                handleSendMessage();
+                ev.preventDefault();
+              }
             }
           }}
           onChange={(e) => setMessage(e.target.value)}
