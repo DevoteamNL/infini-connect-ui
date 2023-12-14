@@ -39,7 +39,7 @@ function getStyles(name: string, personName: readonly string[], theme: Theme) {
   };
 }
 
-export default function PluginSelector() {
+export default function PluginSelector({ disabled }: { disabled?: boolean }) {
   const theme = useTheme();
   const [personName, setPersonName] = React.useState<string[]>([]);
 
@@ -59,6 +59,7 @@ export default function PluginSelector() {
         <FormControl sx={{ m: 1, width: 300 }}>
           <InputLabel id="demo-multiple-chip-label">Plugin</InputLabel>
           <Select
+            disabled={disabled}
             labelId="demo-multiple-chip-label"
             id="demo-multiple-chip"
             multiple

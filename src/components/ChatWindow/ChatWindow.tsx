@@ -62,8 +62,11 @@ const MainContent: React.FC<MainContentProps> = () => {
     >
       <br />
       <br />
-      <PluginSelector></PluginSelector>
-      <Typography paragraph>{selectedThread?.title}</Typography>
+      <PluginSelector
+        disabled={selectedThread?.messages.some(
+          (message) => message.data.role === "user",
+        )}
+      ></PluginSelector>
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
         <List>
           {messages?.map((msg) => (
