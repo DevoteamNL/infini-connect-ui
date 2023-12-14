@@ -125,11 +125,24 @@ const ThreadProvider = ({
   const { credential } = useAuthContext();
 
   const authFetch = useCallback(
-    async (url: string, options?: RequestInit) => {
+    async (
+      params: {
+        threadId?: string;
+        messagesEndpoint?: boolean;
+        options?: RequestInit;
+      } = {},
+    ) => {
+      const url = new URL(process.env.REACT_APP_API_BASE_URL || "");
+      url.pathname = "api/thread/";
+      const threadId = params.threadId || "";
+      const messagesEndpoint =
+        params.messagesEndpoint && params.threadId ? "messages" : "";
+      url.pathname += threadId + "/" + messagesEndpoint;
+
       return await fetch(url, {
-        ...options,
+        ...params.options,
         headers: {
-          ...(options?.headers || {}),
+          ...(params.options?.headers || {}),
           Authorization: `Bearer ${credential?.credential}`,
         },
       });
@@ -143,7 +156,7 @@ const ThreadProvider = ({
     setError("");
 
     try {
-      const response = await authFetch("http://localhost:8080/api/thread");
+      const response = await authFetch();
       dispatch({ type: "SET_THREADS", payload: await response.json() });
       setLoading(false);
     } catch (error) {
@@ -157,9 +170,7 @@ const ThreadProvider = ({
       dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
 
       try {
-        const response = await authFetch(
-          `http://localhost:8080/api/thread/${id}`,
-        );
+        const response = await authFetch({ threadId: id });
         dispatch({ type: "SET_THREADS", payload: await response.json() });
       } catch (error) {
         dispatch({
@@ -199,8 +210,11 @@ const ThreadProvider = ({
       dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
 
       try {
-        await authFetch(`http://localhost:8080/api/thread/${id}`, {
-          method: "DELETE",
+        await authFetch({
+          threadId: id,
+          options: {
+            method: "DELETE",
+          },
         });
         dispatch({ type: "DELETE_THREAD", payload: id });
       } catch (error) {
@@ -220,10 +234,15 @@ const ThreadProvider = ({
 
       if (newThread) {
         try {
-          const response = await authFetch("http://localhost:8080/api/thread", {
-            method: "POST",
-            body: JSON.stringify({ title: message.substring(0, 20), message }),
-            headers: { "Content-Type": "application/json" },
+          const response = await authFetch({
+            options: {
+              method: "POST",
+              body: JSON.stringify({
+                title: message.substring(0, 20),
+                message,
+              }),
+              headers: { "Content-Type": "application/json" },
+            },
           });
           const newThread = await response.json();
           dispatch({
@@ -241,14 +260,15 @@ const ThreadProvider = ({
       }
 
       try {
-        const response = await authFetch(
-          `http://localhost:8080/api/thread/${id}/messages`,
-          {
+        const response = await authFetch({
+          threadId: id,
+          messagesEndpoint: true,
+          options: {
             method: "POST",
             body: JSON.stringify({ text: message }),
             headers: { "Content-Type": "application/json" },
           },
-        );
+        });
         const { id: messageId } = await response.json();
         dispatch({ type: "ADD_MESSAGE", payload: { id, message, messageId } });
       } catch (error) {
