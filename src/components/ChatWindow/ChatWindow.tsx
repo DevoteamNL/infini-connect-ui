@@ -113,6 +113,12 @@ const MainContent: React.FC<MainContentProps> = () => {
           label="Type a message"
           variant="outlined"
           value={message}
+          onKeyDown={(ev) => {
+            if (ev.key === "Enter") {
+              handleSendMessage();
+              ev.preventDefault();
+            }
+          }}
           onChange={(e) => setMessage(e.target.value)}
           InputProps={{
             endAdornment: (
