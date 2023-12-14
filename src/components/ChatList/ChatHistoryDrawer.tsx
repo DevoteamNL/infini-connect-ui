@@ -32,8 +32,13 @@ interface Props {
 
 export default function ChatHistoryDrawer(props: Props) {
   const { logout } = useAuthContext();
-  const { threads, listThreads, createThread, setSelectedThread } =
-    useThreadContext();
+  const {
+    threads,
+    listThreads,
+    createThread,
+    setSelectedThread,
+    selectedThreadId,
+  } = useThreadContext();
   // const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
   //   null,
   // );
@@ -71,7 +76,10 @@ export default function ChatHistoryDrawer(props: Props) {
         <List>
           {threads.map((thread, index) => (
             <ListItem key={thread.id} disablePadding>
-              <ListItemButton onClick={() => setSelectedThread(thread.id)}>
+              <ListItemButton
+                onClick={() => setSelectedThread(thread.id)}
+                selected={selectedThreadId === thread.id}
+              >
                 {/*<ListItemIcon>
                                     {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
                                 </ListItemIcon>*/}

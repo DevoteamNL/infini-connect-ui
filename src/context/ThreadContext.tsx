@@ -157,7 +157,9 @@ const ThreadProvider = ({
 
     try {
       const response = await authFetch();
-      dispatch({ type: "SET_THREADS", payload: await response.json() });
+      const threads = await response.json();
+      dispatch({ type: "SET_THREADS", payload: threads });
+      setSelectedThread(threads[0]?.id);
       setLoading(false);
     } catch (error) {
       setError("Failed to fetch threads");
