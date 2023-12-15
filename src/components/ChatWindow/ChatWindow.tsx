@@ -1,10 +1,12 @@
 import SendIcon from "@mui/icons-material/Send";
 import {
   Box,
+  Grid,
   IconButton,
   List,
   ListItem,
   Paper,
+  styled,
   TextField,
   Typography,
 } from "@mui/material";
@@ -16,6 +18,14 @@ import PluginSelector from "../PluginSelector/PluginSelector";
 interface MainContentProps {
   thread?: Thread;
 }
+
+const Welcome = styled("p")(({ theme }) => ({
+  ...theme.typography.body1,
+  border: `1px solid ${theme.palette.secondary.main}`,
+  borderRadius: theme.shape.borderRadius,
+  padding: theme.spacing(3),
+  margin: theme.spacing(1),
+}));
 
 // MainContent component
 const MainContent: React.FC<MainContentProps> = () => {
@@ -67,45 +77,74 @@ const MainContent: React.FC<MainContentProps> = () => {
           (message) => message.data.role === "user",
         )}
       ></PluginSelector>
-      <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
-        <List>
-          {messages?.map((msg) => (
-            <ListItem
-              key={msg.id}
-              sx={{
-                display: "flex",
-                justifyContent:
-                  msg.data.role === "user" ? "flex-end" : "flex-start",
-              }}
-            >
-              <Paper
+      {messages?.length === 0 ? (
+        <Box
+          sx={{
+            flexGrow: 1,
+            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <Grid container>
+            <Grid item xs={12}>
+              <Typography variant="h6">Hi, how can I help you?</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body1">
+                I can help you with the following:
+              </Typography>
+            </Grid>
+
+            <Grid item xs={6}>
+              <Welcome>Find available desks</Welcome>
+            </Grid>
+            <Grid item xs={6}>
+              <Welcome>Search through CVs</Welcome>
+            </Grid>
+          </Grid>
+        </Box>
+      ) : (
+        <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+          <List>
+            {messages?.map((msg) => (
+              <ListItem
+                key={msg.id}
                 sx={{
-                  p: 1,
-                  maxWidth: "70%",
-                  bgcolor:
-                    msg.data.role === "user"
-                      ? "rgba(173, 216, 230, 0.5)"
-                      : "rgba(211, 211, 211, 0.5)",
-                  border: 1,
-                  borderColor: "grey.300",
-                  borderRadius: 2,
+                  display: "flex",
+                  justifyContent:
+                    msg.data.role === "user" ? "flex-end" : "flex-start",
                 }}
               >
-                <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
-                  {msg.data.content}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{ display: "block", textAlign: "right" }}
+                <Paper
+                  sx={{
+                    p: 1,
+                    maxWidth: "70%",
+                    bgcolor:
+                      msg.data.role === "user"
+                        ? "rgba(173, 216, 230, 0.5)"
+                        : "rgba(211, 211, 211, 0.5)",
+                    border: 1,
+                    borderColor: "grey.300",
+                    borderRadius: 2,
+                  }}
                 >
-                  {/* mock timestamp */ new Date().toLocaleTimeString()}
-                </Typography>
-              </Paper>
-            </ListItem>
-          ))}
-          <div ref={chatEndRef} />
-        </List>
-      </Box>
+                  <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
+                    {msg.data.content}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ display: "block", textAlign: "right" }}
+                  >
+                    {/* mock timestamp */ new Date().toLocaleTimeString()}
+                  </Typography>
+                </Paper>
+              </ListItem>
+            ))}
+            <div ref={chatEndRef} />
+          </List>
+        </Box>
+      )}
       <Box sx={{ mt: 1 }}>
         <TextField
           fullWidth
