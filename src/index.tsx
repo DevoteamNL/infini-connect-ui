@@ -14,7 +14,9 @@ root.render(
   <React.StrictMode>
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={devoteamTheme}>
-        <GoogleOAuthProvider clientId="779787791084-sf0tjf22s5cl3odf9sjg6rch0if9c0qq.apps.googleusercontent.com">
+        <GoogleOAuthProvider
+          clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ""}
+        >
           <AuthProvider>
             <App />
           </AuthProvider>

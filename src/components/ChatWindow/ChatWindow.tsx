@@ -62,8 +62,11 @@ const MainContent: React.FC<MainContentProps> = () => {
     >
       <br />
       <br />
-      <PluginSelector></PluginSelector>
-      <Typography paragraph>{selectedThread?.title}</Typography>
+      <PluginSelector
+        disabled={selectedThread?.messages.some(
+          (message) => message.data.role === "user",
+        )}
+      ></PluginSelector>
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
         <List>
           {messages?.map((msg) => (
@@ -88,7 +91,9 @@ const MainContent: React.FC<MainContentProps> = () => {
                   borderRadius: 2,
                 }}
               >
-                <Typography variant="body1">{msg.data.content}</Typography>
+                <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
+                  {msg.data.content}
+                </Typography>
                 <Typography
                   variant="caption"
                   sx={{ display: "block", textAlign: "right" }}
@@ -110,6 +115,14 @@ const MainContent: React.FC<MainContentProps> = () => {
           label="Type a message"
           variant="outlined"
           value={message}
+          onKeyDown={(ev) => {
+            if (ev.key === "Enter") {
+              if (!ev.shiftKey) {
+                handleSendMessage();
+                ev.preventDefault();
+              }
+            }
+          }}
           onChange={(e) => setMessage(e.target.value)}
           InputProps={{
             endAdornment: (
