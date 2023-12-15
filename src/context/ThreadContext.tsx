@@ -42,12 +42,12 @@ interface Thread {
   messages: Array<Message>;
   loading: boolean;
   error: string | null;
+  replying?: boolean;
 }
 
 // Define the action types
 type Action =
   | { type: "SET_THREADS"; payload: Thread[] }
-  | { type: "SET_ALL_LOADING"; payload: { loading: boolean } }
   | { type: "SET_LOADING"; payload: { id: number; loading: boolean } }
   | { type: "SET_ERROR"; payload: { id: number; error: string } }
   | {
@@ -66,12 +66,6 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
   switch (action.type) {
     case "SET_THREADS":
       return action.payload;
-    case "SET_LOADING":
-      return state.map((thread) =>
-        thread.id === action.payload.id
-          ? { ...thread, loading: action.payload.loading }
-          : thread,
-      );
     case "SET_ERROR":
       return state.map((thread) =>
         thread.id === action.payload.id
@@ -88,6 +82,7 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
               messages: action.payload.messages,
               loading: false,
               newThread: false,
+              replying: false,
             }
           : thread,
       );
@@ -104,6 +99,7 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
                   : thread.title,
               messages: [...thread.messages, action.payload.message],
               loading: false,
+              replying: action.payload.message.data.role === "user",
             }
           : thread,
       );

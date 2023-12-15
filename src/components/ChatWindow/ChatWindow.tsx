@@ -6,6 +6,7 @@ import {
   List,
   ListItem,
   Paper,
+  Skeleton,
   styled,
   TextField,
   Typography,
@@ -26,6 +27,48 @@ const Welcome = styled("p")(({ theme }) => ({
   padding: theme.spacing(3),
   margin: theme.spacing(1),
 }));
+
+const Message = ({
+  sender,
+  message,
+  caption,
+}: {
+  sender: boolean;
+  message?: string;
+  caption: string;
+}) => {
+  return (
+    <ListItem
+      sx={{
+        display: "flex",
+        justifyContent: sender ? "flex-end" : "flex-start",
+      }}
+    >
+      <Paper
+        sx={{
+          p: 1,
+          maxWidth: "70%",
+          bgcolor: sender
+            ? "rgba(173, 216, 230, 0.5)"
+            : "rgba(211, 211, 211, 0.5)",
+          border: 1,
+          borderColor: "grey.300",
+          borderRadius: 2,
+        }}
+      >
+        <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
+          {message || <Skeleton />}
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{ display: "block", textAlign: "right" }}
+        >
+          {caption}
+        </Typography>
+      </Paper>
+    </ListItem>
+  );
+};
 
 // MainContent component
 const MainContent: React.FC<MainContentProps> = () => {
@@ -108,39 +151,18 @@ const MainContent: React.FC<MainContentProps> = () => {
         <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
           <List>
             {messages?.map((msg) => (
-              <ListItem
-                key={msg.id}
-                sx={{
-                  display: "flex",
-                  justifyContent:
-                    msg.data.role === "user" ? "flex-end" : "flex-start",
-                }}
-              >
-                <Paper
-                  sx={{
-                    p: 1,
-                    maxWidth: "70%",
-                    bgcolor:
-                      msg.data.role === "user"
-                        ? "rgba(173, 216, 230, 0.5)"
-                        : "rgba(211, 211, 211, 0.5)",
-                    border: 1,
-                    borderColor: "grey.300",
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography variant="body1" sx={{ whiteSpace: "pre-line" }}>
-                    {msg.data.content}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ display: "block", textAlign: "right" }}
-                  >
-                    {/* mock timestamp */ new Date().toLocaleTimeString()}
-                  </Typography>
-                </Paper>
-              </ListItem>
+              <Message
+                sender={msg.data.role === "user"}
+                message={msg.data.content}
+                caption={new Date().toLocaleTimeString() /** Mock sent date */}
+              ></Message>
             ))}
+            {selectedThread?.replying && (
+              <Message
+                sender={false}
+                caption="InfiniConnect Replying..."
+              ></Message>
+            )}
             <div ref={chatEndRef} />
           </List>
         </Box>
