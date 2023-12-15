@@ -31,7 +31,11 @@ const SignIn = () => {
       </Typography>
 
       <Box flex={1}>
-        <GoogleLogin onSuccess={login} onError={console.error} />
+        <GoogleLogin
+          onSuccess={login}
+          onError={console.error}
+          auto_select={true}
+        />
       </Box>
 
       <img src="/static/images/devoteam_rgb.png" alt="logo" width="200px" />

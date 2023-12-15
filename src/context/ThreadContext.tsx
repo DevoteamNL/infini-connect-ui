@@ -122,7 +122,7 @@ const ThreadProvider = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedThread, setSelectedThread] = useState<string | undefined>();
-  const { credential } = useAuthContext();
+  const { credential, checkExpired } = useAuthContext();
 
   const authFetch = useCallback(
     async (
@@ -132,6 +132,10 @@ const ThreadProvider = ({
         options?: RequestInit;
       } = {},
     ) => {
+      const expired = checkExpired();
+      if (expired) {
+        return;
+      }
       const url = new URL(process.env.REACT_APP_API_BASE_URL || "");
       url.pathname = "api/thread/";
       const threadId = params.threadId || "";
@@ -139,15 +143,19 @@ const ThreadProvider = ({
         params.messagesEndpoint && params.threadId ? "messages" : "";
       url.pathname += threadId + "/" + messagesEndpoint;
 
-      return await fetch(url, {
+      const response = await fetch(url, {
         ...params.options,
         headers: {
           ...(params.options?.headers || {}),
           Authorization: `Bearer ${credential?.credential}`,
         },
       });
+      if (!response.ok) {
+        throw new Error("Failed to fetch");
+      }
+      return response;
     },
-    [credential?.credential],
+    [checkExpired, credential?.credential],
   );
 
   // Fetch all threads
@@ -157,6 +165,9 @@ const ThreadProvider = ({
 
     try {
       const response = await authFetch();
+      if (!response) {
+        return;
+      }
       const threads = await response.json();
       dispatch({ type: "SET_THREADS", payload: threads });
       setSelectedThread(threads[0]?.id);
@@ -173,6 +184,9 @@ const ThreadProvider = ({
 
       try {
         const response = await authFetch({ threadId: id });
+        if (!response) {
+          return;
+        }
         dispatch({ type: "SET_THREADS", payload: await response.json() });
       } catch (error) {
         dispatch({
@@ -246,6 +260,9 @@ const ThreadProvider = ({
               headers: { "Content-Type": "application/json" },
             },
           });
+          if (!response) {
+            return;
+          }
           const newThread = await response.json();
           dispatch({
             type: "SET_THREAD",
@@ -271,6 +288,9 @@ const ThreadProvider = ({
             headers: { "Content-Type": "application/json" },
           },
         });
+        if (!response) {
+          return;
+        }
         const { id: messageId } = await response.json();
         dispatch({ type: "ADD_MESSAGE", payload: { id, message, messageId } });
       } catch (error) {
