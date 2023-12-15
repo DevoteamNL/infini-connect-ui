@@ -1,7 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
-import { Fab, Skeleton } from "@mui/material";
+import { Button, Container, Fab, Skeleton, styled } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -30,6 +30,19 @@ interface Props {
   window?: () => Window;
 }
 
+const Error = styled("div")(({ theme }) => ({
+  color: theme.palette.error.main,
+  backgroundColor: theme.palette.error.contrastText,
+  border: `1px solid ${theme.palette.error.light}`,
+  borderRadius: theme.shape.borderRadius,
+  padding: theme.spacing(1),
+  margin: theme.spacing(1),
+  textAlign: "center",
+  display: "flex",
+  justifyContent: "center",
+  flexDirection: "column",
+}));
+
 export default function ChatHistoryDrawer(props: Props) {
   const { logout } = useAuthContext();
   const {
@@ -39,6 +52,7 @@ export default function ChatHistoryDrawer(props: Props) {
     setSelectedThread,
     selectedThreadId,
     loading,
+    error,
   } = useThreadContext();
   // const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
   //   null,
@@ -74,26 +88,35 @@ export default function ChatHistoryDrawer(props: Props) {
           </Fab>
         </Box>
         <Divider />
-        <List>
-          {[...Array(loading ? 4 : 0)].map(() => (
-            <ListItem>
-              <Skeleton sx={{ flexGrow: 1, fontSize: "1rem" }} />
-            </ListItem>
-          ))}
-          {threads.map((thread, index) => (
-            <ListItem key={thread.id} disablePadding>
-              <ListItemButton
-                onClick={() => setSelectedThread(thread.id)}
-                selected={selectedThreadId === thread.id}
-              >
-                {/*<ListItemIcon>
+        {error ? (
+          <Container>
+            <Error>
+              {error}
+              <Button onClick={() => listThreads()}>Retry</Button>
+            </Error>
+          </Container>
+        ) : (
+          <List>
+            {[...Array(loading ? 4 : 0)].map(() => (
+              <ListItem>
+                <Skeleton sx={{ flexGrow: 1, fontSize: "1rem" }} />
+              </ListItem>
+            ))}
+            {threads.map((thread, index) => (
+              <ListItem key={thread.id} disablePadding>
+                <ListItemButton
+                  onClick={() => setSelectedThread(thread.id)}
+                  selected={selectedThreadId === thread.id}
+                >
+                  {/*<ListItemIcon>
                                     {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
                                 </ListItemIcon>*/}
-                <ListItemText primary={thread.title} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+                  <ListItemText primary={thread.title} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        )}
       </Box>
       <Box flexGrow={1} />
       <Divider />

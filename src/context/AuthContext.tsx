@@ -1,4 +1,4 @@
-import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
+import { Dialog, DialogContent, DialogTitle } from "@mui/material";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import {
   createContext,
@@ -86,19 +86,11 @@ const AuthProvider = ({ children }: { children: ReactNode[] | ReactNode }) => {
       >
         <DialogTitle>Sign in again</DialogTitle>
         <DialogContent>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <GoogleLogin
-              onSuccess={onLogin}
-              onError={console.error}
-              auto_select={true}
-            />
-          </Box>
+          <GoogleLogin
+            onSuccess={onLogin}
+            onError={console.error}
+            auto_select={true}
+          />
         </DialogContent>
       </Dialog>
       {children}
