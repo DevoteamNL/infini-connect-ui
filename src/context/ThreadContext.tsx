@@ -137,10 +137,10 @@ const ThreadProvider = ({
       }
       const url = new URL(process.env.REACT_APP_API_BASE_URL || "");
       url.pathname = "api/thread/";
-      const threadId = params.threadId || "";
-      const messagesEndpoint =
-        params.messagesEndpoint && params.threadId ? "messages" : "";
-      url.pathname += threadId + "/" + messagesEndpoint;
+      if (params.threadId) {
+        url.pathname +=
+          params.threadId + "/" + (params.messagesEndpoint ? "messages" : "");
+      }
 
       const response = await fetch(url, {
         ...params.options,
