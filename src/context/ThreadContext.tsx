@@ -115,13 +115,24 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
 // Create the thread context
 const ThreadContext = createContext<ThreadContextProps | undefined>(undefined);
 
+const constructNewThread = (): Thread => {
+  return {
+    id: Math.random(),
+    title: "New Chat",
+    messages: [],
+    loading: false,
+    error: null,
+    newThread: true,
+  };
+};
+
 // Create the thread provider
 const ThreadProvider = ({
   children,
 }: {
   children: ReactNode[] | ReactNode;
 }) => {
-  const [threads, dispatch] = useReducer(threadReducer, []);
+  const [threads, dispatch] = useReducer(threadReducer, [constructNewThread()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedThread, setSelectedThread] = useState<number | undefined>();
@@ -181,19 +192,12 @@ const ThreadProvider = ({
 
   // Create a new thread
   const createThread = async () => {
-    const tempId = Math.random();
+    const newThread = constructNewThread();
     dispatch({
       type: "ADD_THREAD",
-      payload: {
-        id: tempId,
-        title: "New Chat",
-        messages: [],
-        loading: false,
-        error: null,
-        newThread: true,
-      },
+      payload: newThread,
     });
-    setSelectedThread(tempId);
+    setSelectedThread(newThread.id);
   };
 
   // Delete a thread by ID
