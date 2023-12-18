@@ -1,7 +1,16 @@
+import { Delete, MoreHoriz } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
-import { Button, Container, Fab, Skeleton, styled } from "@mui/material";
+import {
+  Button,
+  Container,
+  Fab,
+  Menu,
+  MenuItem,
+  Skeleton,
+  styled,
+} from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -16,7 +25,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import * as React from "react";
 import { useAuthContext } from "../../context/AuthContext";
-import { useThreadContext } from "../../context/ThreadContext";
+import { Thread, useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 
 const drawerWidth = 300;
@@ -43,28 +52,58 @@ const Error = styled("div")(({ theme }) => ({
   flexDirection: "column",
 }));
 
+const ThreadItem = ({ thread }: { thread: Thread }) => {
+  const { setSelectedThread, selectedThreadId, deleteThread } =
+    useThreadContext();
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  return (
+    <ListItem
+      key={thread.id}
+      disablePadding
+      secondaryAction={
+        <IconButton edge="end" onClick={handleClick}>
+          <MoreHoriz />
+        </IconButton>
+      }
+    >
+      <ListItemButton
+        onClick={() => setSelectedThread(thread.id)}
+        selected={selectedThreadId === thread.id}
+      >
+        <ListItemText primary={thread.title} />
+      </ListItemButton>
+      <Menu anchorEl={anchorEl} onClose={() => handleClose()} open={open}>
+        <MenuItem
+          onClick={() => {
+            deleteThread(thread.id, thread.newThread);
+            handleClose();
+          }}
+        >
+          <Delete sx={{ marginRight: 1 }} />
+          Delete
+        </MenuItem>
+      </Menu>
+    </ListItem>
+  );
+};
+
 export default function ChatHistoryDrawer(props: Props) {
   const { logout } = useAuthContext();
-  const {
-    threads,
-    listThreads,
-    createThread,
-    setSelectedThread,
-    selectedThreadId,
-    loading,
-    error,
-  } = useThreadContext();
-  // const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
-  //   null,
-  // );
+  const { threads, listThreads, createThread, loading, error } =
+    useThreadContext();
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-  // const handleCloseUserMenu = () => {
-  //   setAnchorElUser(null);
-  // };
 
   React.useEffect(() => {
     listThreads();
@@ -103,17 +142,7 @@ export default function ChatHistoryDrawer(props: Props) {
               </ListItem>
             ))}
             {threads.map((thread, index) => (
-              <ListItem key={thread.id} disablePadding>
-                <ListItemButton
-                  onClick={() => setSelectedThread(thread.id)}
-                  selected={selectedThreadId === thread.id}
-                >
-                  {/*<ListItemIcon>
-                                    {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                                </ListItemIcon>*/}
-                  <ListItemText primary={thread.title} />
-                </ListItemButton>
-              </ListItem>
+              <ThreadItem thread={thread} />
             ))}
           </List>
         )}
@@ -126,9 +155,7 @@ export default function ChatHistoryDrawer(props: Props) {
           {settings.map((text, index) => (
             <ListItem key={text} disablePadding>
               <ListItemButton>
-                <ListItemIcon>
-                  {/*{index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}*/}
-                </ListItemIcon>
+                <ListItemIcon></ListItemIcon>
                 <ListItemText primary={text} />
               </ListItemButton>
             </ListItem>
