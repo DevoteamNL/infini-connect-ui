@@ -15,7 +15,6 @@ interface ThreadContextProps {
   error: string;
   selectedThreadId?: number;
   listThreads: () => Promise<void>;
-  getThreadById: (id: number) => Promise<void>;
   createThread: () => Promise<void>;
   deleteThread: (id: number, newThread?: boolean) => Promise<void>;
   postMessage: (
@@ -70,6 +69,12 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
       return state.map((thread) =>
         thread.id === action.payload.id
           ? { ...thread, error: action.payload.error, loading: false }
+          : thread,
+      );
+    case "SET_LOADING":
+      return state.map((thread) =>
+        thread.id === action.payload.id
+          ? { ...thread, error: null, loading: true }
           : thread,
       );
     case "ADD_THREAD":
@@ -173,27 +178,6 @@ const ThreadProvider = ({
       setError("Failed to fetch threads");
     }
   }, [authFetch]);
-
-  // Fetch a thread by ID
-  const getThreadById = useCallback(
-    async (id: number) => {
-      dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
-
-      try {
-        const response = await authFetch({ threadId: id });
-        if (!response) {
-          return;
-        }
-        dispatch({ type: "SET_THREADS", payload: await response.json() });
-      } catch (error) {
-        dispatch({
-          type: "SET_ERROR",
-          payload: { id, error: "Failed to fetch thread" },
-        });
-      }
-    },
-    [authFetch],
-  );
 
   // Create a new thread
   const createThread = async () => {
@@ -329,7 +313,6 @@ const ThreadProvider = ({
         error,
         selectedThreadId: selectedThread || threads[0]?.id,
         listThreads,
-        getThreadById,
         createThread,
         deleteThread,
         postMessage,

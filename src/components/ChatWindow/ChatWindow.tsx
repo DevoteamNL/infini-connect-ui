@@ -95,7 +95,7 @@ const MainContent: React.FC<MainContentProps> = () => {
 
   // Function to handle sending a message
   const handleSendMessage = () => {
-    if (message && selectedThread) {
+    if (message && selectedThread && !selectedThread.loading) {
       postMessage(selectedThread.id, message, selectedThread.newThread);
       setMessage("");
     }
@@ -152,16 +152,14 @@ const MainContent: React.FC<MainContentProps> = () => {
           <List>
             {messages?.map((msg) => (
               <Message
+                key={msg.id}
                 sender={msg.data.role === "user"}
                 message={msg.data.content}
                 caption={new Date().toLocaleTimeString() /** Mock sent date */}
               ></Message>
             ))}
             {selectedThread?.replying && (
-              <Message
-                sender={false}
-                caption="thinking..."
-              ></Message>
+              <Message sender={false} caption="thinking..."></Message>
             )}
             <div ref={chatEndRef} />
           </List>
@@ -187,7 +185,10 @@ const MainContent: React.FC<MainContentProps> = () => {
           onChange={(e) => setMessage(e.target.value)}
           InputProps={{
             endAdornment: (
-              <IconButton onClick={handleSendMessage}>
+              <IconButton
+                onClick={handleSendMessage}
+                disabled={selectedThread?.loading}
+              >
                 <SendIcon />
               </IconButton>
             ),

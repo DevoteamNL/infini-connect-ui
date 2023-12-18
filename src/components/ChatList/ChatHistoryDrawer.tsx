@@ -69,7 +69,7 @@ const ThreadItem = ({ thread }: { thread: Thread }) => {
       key={thread.id}
       disablePadding
       secondaryAction={
-        <IconButton edge="end" onClick={handleClick}>
+        <IconButton edge="end" onClick={handleClick} disabled={thread.loading}>
           <MoreHoriz />
         </IconButton>
       }
@@ -136,13 +136,13 @@ export default function ChatHistoryDrawer(props: Props) {
           </Container>
         ) : (
           <List>
-            {[...Array(loading ? 4 : 0)].map(() => (
-              <ListItem>
+            {[...Array(loading ? 4 : 0)].map((_, index) => (
+              <ListItem key={index}>
                 <Skeleton sx={{ flexGrow: 1, fontSize: "1rem" }} />
               </ListItem>
             ))}
-            {threads.map((thread, index) => (
-              <ThreadItem thread={thread} />
+            {threads.map((thread) => (
+              <ThreadItem key={thread.id} thread={thread} />
             ))}
           </List>
         )}
@@ -152,7 +152,7 @@ export default function ChatHistoryDrawer(props: Props) {
       <Box>
         <Divider />
         <List>
-          {settings.map((text, index) => (
+          {settings.map((text) => (
             <ListItem key={text} disablePadding>
               <ListItemButton>
                 <ListItemIcon></ListItemIcon>
