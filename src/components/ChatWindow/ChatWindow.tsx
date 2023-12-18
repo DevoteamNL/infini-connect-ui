@@ -160,7 +160,7 @@ const MainContent: React.FC<MainContentProps> = () => {
             {selectedThread?.replying && (
               <Message
                 sender={false}
-                caption="InfiniConnect Replying..."
+                caption="thinking..."
               ></Message>
             )}
             <div ref={chatEndRef} />
