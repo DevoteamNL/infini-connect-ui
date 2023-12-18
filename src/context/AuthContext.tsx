@@ -1,15 +1,40 @@
-import { CredentialResponse } from "@react-oauth/google";
-import { createContext, ReactNode, useContext, useState } from "react";
+import { Dialog, DialogContent, DialogTitle } from "@mui/material";
+import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useState,
+} from "react";
 
 const oauthCookie = localStorage.getItem("oauth2-response");
 const parsedCookie: CredentialResponse | undefined =
   oauthCookie && JSON.parse(oauthCookie);
+
+const parseJwt = (token: string): { exp: number } | null => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(""),
+    );
+
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+};
 
 const AuthContext = createContext({
   loggedIn: !!parsedCookie,
   login: (_: CredentialResponse) => {},
   logout: () => {},
   credential: parsedCookie,
+  checkExpired: (): boolean => false,
 });
 
 const AuthProvider = ({ children }: { children: ReactNode[] | ReactNode }) => {
@@ -17,24 +42,57 @@ const AuthProvider = ({ children }: { children: ReactNode[] | ReactNode }) => {
   const [credential, setCredential] = useState<CredentialResponse | undefined>(
     parsedCookie,
   );
+  const [expired, setExpired] = useState(false);
+
+  const onLogin = (response: CredentialResponse) => {
+    setLoggedIn(true);
+    setCredential(response);
+    localStorage.setItem("oauth2-response", JSON.stringify(response));
+    setExpired(false);
+  };
+
+  const checkExpired = useCallback(() => {
+    if (credential?.credential) {
+      const payload = parseJwt(credential.credential);
+      if (payload && payload.exp < Date.now() / 1000) {
+        setExpired(true);
+        return true;
+      }
+    }
+    return false;
+  }, [credential]);
 
   return (
     <AuthContext.Provider
       value={{
         loggedIn: loggedIn,
-        login: (response: CredentialResponse) => {
-          setLoggedIn(true);
-          setCredential(response);
-          localStorage.setItem("oauth2-response", JSON.stringify(response));
-        },
+        login: onLogin,
         logout: () => {
           setLoggedIn(false);
           setCredential(undefined);
           localStorage.removeItem("oauth2-response");
+          setExpired(false);
         },
         credential: credential,
+        checkExpired: checkExpired,
       }}
     >
+      <Dialog
+        open={expired}
+        onClose={(event: Event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+      >
+        <DialogTitle>Sign in again</DialogTitle>
+        <DialogContent>
+          <GoogleLogin
+            onSuccess={onLogin}
+            onError={console.error}
+            auto_select={true}
+          />
+        </DialogContent>
+      </Dialog>
       {children}
     </AuthContext.Provider>
   );
