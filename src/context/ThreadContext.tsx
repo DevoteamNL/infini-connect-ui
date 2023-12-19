@@ -135,7 +135,7 @@ const ThreadProvider = ({
       if (expired) {
         return;
       }
-      const url = new URL(process.env.REACT_APP_API_BASE_URL || "");
+      const url = new URL(import.meta.env.VITE_API_BASE_URL || "");
       url.pathname = "api/thread/";
       if (params.threadId) {
         url.pathname +=

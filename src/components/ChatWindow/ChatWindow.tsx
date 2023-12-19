@@ -158,10 +158,7 @@ const MainContent: React.FC<MainContentProps> = () => {
               ></Message>
             ))}
             {selectedThread?.replying && (
-              <Message
-                sender={false}
-                caption="thinking..."
-              ></Message>
+              <Message sender={false} caption="thinking..."></Message>
             )}
             <div ref={chatEndRef} />
           </List>

@@ -3,6 +3,7 @@ import SignIn from "./components/SignIn/SignIn";
 import { useAuthContext } from "./context/AuthContext";
 import { ThreadProvider } from "./context/ThreadContext";
 function App() {
+  console.log(import.meta.env);
   const { loggedIn } = useAuthContext();
 
   return loggedIn ? (
