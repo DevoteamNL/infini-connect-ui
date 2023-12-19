@@ -8,11 +8,10 @@ import {
   useState,
 } from "react";
 
-const oauthCookie = localStorage.getItem("oauth2-response");
-const parsedCookie: CredentialResponse | undefined =
-  oauthCookie && JSON.parse(oauthCookie);
-
-const parseJwt = (token: string): { exp: number } | null => {
+const parseJwt = (token?: string): { exp: number; picture: string } | null => {
+  if (!token) {
+    return null;
+  }
   try {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -29,8 +28,13 @@ const parseJwt = (token: string): { exp: number } | null => {
   }
 };
 
+const oauthCookie = localStorage.getItem("oauth2-response");
+const parsedCookie: CredentialResponse | undefined =
+  oauthCookie && JSON.parse(oauthCookie);
+const parsedProfile = parseJwt(parsedCookie?.credential);
+
 const AuthContext = createContext({
-  loggedIn: !!parsedCookie,
+  profile: parsedProfile,
   login: (_: CredentialResponse) => {},
   logout: () => {},
   credential: parsedCookie,
@@ -38,37 +42,34 @@ const AuthContext = createContext({
 });
 
 const AuthProvider = ({ children }: { children: ReactNode[] | ReactNode }) => {
-  const [loggedIn, setLoggedIn] = useState(!!parsedCookie);
+  const [profile, setProfile] = useState(parsedProfile);
   const [credential, setCredential] = useState<CredentialResponse | undefined>(
     parsedCookie,
   );
   const [expired, setExpired] = useState(false);
 
   const onLogin = (response: CredentialResponse) => {
-    setLoggedIn(true);
+    setProfile(parseJwt(response.credential));
     setCredential(response);
     localStorage.setItem("oauth2-response", JSON.stringify(response));
     setExpired(false);
   };
 
   const checkExpired = useCallback(() => {
-    if (credential?.credential) {
-      const payload = parseJwt(credential.credential);
-      if (payload && payload.exp < Date.now() / 1000) {
-        setExpired(true);
-        return true;
-      }
+    if (profile && profile.exp < Date.now() / 1000) {
+      setExpired(true);
+      return true;
     }
     return false;
-  }, [credential]);
+  }, [profile]);
 
   return (
     <AuthContext.Provider
       value={{
-        loggedIn: loggedIn,
+        profile: profile,
         login: onLogin,
         logout: () => {
-          setLoggedIn(false);
+          setProfile(null);
           setCredential(undefined);
           localStorage.removeItem("oauth2-response");
           setExpired(false);

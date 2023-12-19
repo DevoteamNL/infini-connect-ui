@@ -3,6 +3,7 @@ import AddIcon from "@mui/icons-material/Add";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
+  Avatar,
   Button,
   Container,
   Fab,
@@ -29,15 +30,6 @@ import { Thread, useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 
 const drawerWidth = 300;
-const settings = ["Profile", "Account", "Dashboard"];
-
-interface Props {
-  /**
-   * Injected by the documentation to work in an iframe.
-   * Remove this when copying and pasting into your project.
-   */
-  window?: () => Window;
-}
 
 const Error = styled("div")(({ theme }) => ({
   color: theme.palette.error.main,
@@ -95,8 +87,8 @@ const ThreadItem = ({ thread }: { thread: Thread }) => {
   );
 };
 
-export default function ChatHistoryDrawer(props: Props) {
-  const { logout } = useAuthContext();
+export default function ChatHistoryDrawer() {
+  const { logout, profile } = useAuthContext();
   const { threads, listThreads, createThread, loading, error } =
     useThreadContext();
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -152,20 +144,15 @@ export default function ChatHistoryDrawer(props: Props) {
       <Box>
         <Divider />
         <List>
-          {settings.map((text) => (
-            <ListItem key={text} disablePadding>
-              <ListItemButton>
-                <ListItemIcon></ListItemIcon>
-                <ListItemText primary={text} />
-              </ListItemButton>
-            </ListItem>
-          ))}
           <ListItem key="Logout" disablePadding>
             <ListItemButton onClick={logout}>
               <ListItemIcon>
                 <LogoutIcon />
               </ListItemIcon>
               <ListItemText primary="Logout" />
+              <ListItemIcon>
+                <Avatar src={profile?.picture} />
+              </ListItemIcon>
             </ListItemButton>
           </ListItem>
         </List>

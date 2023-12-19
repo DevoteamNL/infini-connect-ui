@@ -14,6 +14,9 @@ const devoteamTheme = createTheme({
       default: "#ffffff",
     },
   },
+  typography: {
+    fontFamily: 'Montserrat',
+  },
   // You can also customize typography, breakpoints, etc.
 });
 
