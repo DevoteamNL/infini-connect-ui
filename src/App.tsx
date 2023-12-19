@@ -1,4 +1,4 @@
-import ChatHistoryDrawer from "./components/ChatList/ChatHistoryDrawer";
+import ChatHistory from "./components/ChatList/ChatHistoryDrawer";
 import SignIn from "./components/SignIn/SignIn";
 import { useAuthContext } from "./context/AuthContext";
 import { ThreadProvider } from "./context/ThreadContext";
@@ -7,7 +7,7 @@ function App() {
 
   return profile ? (
     <ThreadProvider>
-      <ChatHistoryDrawer />
+      <ChatHistory />
     </ThreadProvider>
   ) : (
     <SignIn />

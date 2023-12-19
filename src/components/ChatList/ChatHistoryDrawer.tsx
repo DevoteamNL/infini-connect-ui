@@ -1,12 +1,16 @@
 import { Delete, MoreHoriz } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
   Avatar,
   Button,
   Container,
+  Drawer,
   Fab,
+  ListItemButton,
   Menu,
   MenuItem,
   Skeleton,
@@ -16,16 +20,15 @@ import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
 import Divider from "@mui/material/Divider";
-import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
-import * as React from "react";
+import { useEffect, useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
+import { useSettings } from "../../context/SettingsContext";
 import { Thread, useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 
@@ -47,7 +50,7 @@ const Error = styled("div")(({ theme }) => ({
 const ThreadItem = ({ thread }: { thread: Thread }) => {
   const { setSelectedThread, selectedThreadId, deleteThread } =
     useThreadContext();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -87,21 +90,20 @@ const ThreadItem = ({ thread }: { thread: Thread }) => {
   );
 };
 
-export default function ChatHistoryDrawer() {
+const ChatHistoryDrawer = () => {
   const { logout, profile } = useAuthContext();
   const { threads, listThreads, createThread, loading, error } =
     useThreadContext();
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const {
+    settings: { darkMode },
+    toggleDarkMode,
+  } = useSettings();
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  React.useEffect(() => {
+  useEffect(() => {
     listThreads();
   }, [listThreads]);
 
-  const drawer = (
+  return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Box sx={{ overflowY: "auto", flexGrow: 1 }}>
         <Toolbar>
@@ -144,7 +146,15 @@ export default function ChatHistoryDrawer() {
       <Box>
         <Divider />
         <List>
-          <ListItem key="Logout" disablePadding>
+          <ListItem disablePadding>
+            <ListItemButton onClick={toggleDarkMode}>
+              <ListItemIcon>
+                {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+              </ListItemIcon>
+              <ListItemText primary={darkMode ? "Light mode" : "Dark mode"} />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
             <ListItemButton onClick={logout}>
               <ListItemIcon>
                 <LogoutIcon />
@@ -159,6 +169,14 @@ export default function ChatHistoryDrawer() {
       </Box>
     </Box>
   );
+};
+
+export default function ChatHistory() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -203,7 +221,7 @@ export default function ChatHistoryDrawer() {
             },
           }}
         >
-          {drawer}
+          <ChatHistoryDrawer />
         </Drawer>
         <Drawer
           variant="permanent"
@@ -216,7 +234,7 @@ export default function ChatHistoryDrawer() {
           }}
           open
         >
-          {drawer}
+          <ChatHistoryDrawer />
         </Drawer>
       </Box>
       <ChatWindow />

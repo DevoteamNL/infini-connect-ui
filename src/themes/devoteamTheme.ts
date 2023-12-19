@@ -1,9 +1,9 @@
 // theme.js or theme.ts
-import { createTheme } from "@mui/material/styles";
+import { PaletteMode } from "@mui/material";
 
-const devoteamTheme = createTheme({
-  // Define your theme settings here
+export const devoteamDesignTokens = (mode: PaletteMode) => ({
   palette: {
+    mode,
     primary: {
       main: "#f8485e",
     },
@@ -11,13 +11,10 @@ const devoteamTheme = createTheme({
       main: "#fca2ae",
     },
     background: {
-      default: "#ffffff",
+      default: mode === "light" ? "#ffffff" : "#000000",
     },
   },
   typography: {
-    fontFamily: 'Montserrat',
+    fontFamily: "Montserrat",
   },
-  // You can also customize typography, breakpoints, etc.
 });
-
-export default devoteamTheme;
