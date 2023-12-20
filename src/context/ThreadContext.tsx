@@ -15,7 +15,6 @@ interface ThreadContextProps {
   error: string;
   selectedThreadId?: number;
   listThreads: () => Promise<void>;
-  getThreadById: (id: number) => Promise<void>;
   createThread: () => Promise<void>;
   deleteThread: (id: number, newThread?: boolean) => Promise<void>;
   postMessage: (
@@ -72,6 +71,12 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
           ? { ...thread, error: action.payload.error, loading: false }
           : thread,
       );
+    case "SET_LOADING":
+      return state.map((thread) =>
+        thread.id === action.payload.id
+          ? { ...thread, error: null, loading: true }
+          : thread,
+      );
     case "ADD_THREAD":
       return [...state, action.payload];
     case "SET_THREAD":
@@ -86,7 +91,13 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
           : thread,
       );
     case "DELETE_THREAD":
-      return state.filter((thread) => thread.id !== action.payload);
+      const withThreadRemoved = state.filter(
+        (thread) => thread.id !== action.payload,
+      );
+
+      return withThreadRemoved.length === 0
+        ? [constructNewThread()]
+        : withThreadRemoved;
     case "ADD_MESSAGE":
       return state.map((thread) =>
         thread.id === action.payload.id
@@ -110,13 +121,24 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
 // Create the thread context
 const ThreadContext = createContext<ThreadContextProps | undefined>(undefined);
 
+const constructNewThread = (): Thread => {
+  return {
+    id: Math.random(),
+    title: "New Chat",
+    messages: [],
+    loading: false,
+    error: null,
+    newThread: true,
+  };
+};
+
 // Create the thread provider
 const ThreadProvider = ({
   children,
 }: {
   children: ReactNode[] | ReactNode;
 }) => {
-  const [threads, dispatch] = useReducer(threadReducer, []);
+  const [threads, dispatch] = useReducer(threadReducer, [constructNewThread()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedThread, setSelectedThread] = useState<number | undefined>();
@@ -174,42 +196,14 @@ const ThreadProvider = ({
     }
   }, [authFetch]);
 
-  // Fetch a thread by ID
-  const getThreadById = useCallback(
-    async (id: number) => {
-      dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
-
-      try {
-        const response = await authFetch({ threadId: id });
-        if (!response) {
-          return;
-        }
-        dispatch({ type: "SET_THREADS", payload: await response.json() });
-      } catch (error) {
-        dispatch({
-          type: "SET_ERROR",
-          payload: { id, error: "Failed to fetch thread" },
-        });
-      }
-    },
-    [authFetch],
-  );
-
   // Create a new thread
   const createThread = async () => {
-    const tempId = Math.random();
+    const newThread = constructNewThread();
     dispatch({
       type: "ADD_THREAD",
-      payload: {
-        id: tempId,
-        title: "New Chat",
-        messages: [],
-        loading: false,
-        error: null,
-        newThread: true,
-      },
+      payload: newThread,
     });
-    setSelectedThread(tempId);
+    setSelectedThread(newThread.id);
   };
 
   // Delete a thread by ID
@@ -329,7 +323,6 @@ const ThreadProvider = ({
         error,
         selectedThreadId: selectedThread || threads[0]?.id,
         listThreads,
-        getThreadById,
         createThread,
         deleteThread,
         postMessage,
