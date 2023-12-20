@@ -96,7 +96,12 @@ const MainContent: React.FC<MainContentProps> = () => {
   // Function to handle sending a message
   const handleSendMessage = () => {
     if (message && selectedThread && !selectedThread.loading) {
-      postMessage(selectedThread.id, message, selectedThread.newThread);
+      postMessage(
+        selectedThread.id,
+        message,
+        selectedThread.newThread,
+        selectedThread.title,
+      );
       setMessage("");
     }
   };
