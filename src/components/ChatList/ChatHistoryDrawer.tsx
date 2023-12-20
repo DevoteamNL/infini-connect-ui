@@ -148,7 +148,11 @@ const ChatHistoryDrawer = () => {
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Box sx={{ overflowY: "auto", flexGrow: 1 }}>
         <Toolbar>
-          <img src="/static/images/devoteam_rgb.png" alt="logo" height="50px" />
+          <img
+            src={`/static/images/devoteam_rgb${darkMode ? "_white" : ""}.png`}
+            alt="logo"
+            height="50px"
+          />
         </Toolbar>
         <Divider />
         <Box sx={{ p: 2 }}>
