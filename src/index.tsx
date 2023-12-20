@@ -9,9 +9,7 @@ import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { devoteamDesignTokens } from "./themes/devoteamTheme";
 
 const Theme = ({ children }: { children: ReactNode[] | ReactNode }) => {
-  const {
-    settings: { darkMode },
-  } = useSettings();
+  const { darkMode } = useSettings();
   const mode: PaletteMode = darkMode ? "dark" : "light";
   const theme = useMemo(() => createTheme(devoteamDesignTokens(mode)), [mode]);
   return <ThemeProvider theme={theme}>{children}</ThemeProvider>;

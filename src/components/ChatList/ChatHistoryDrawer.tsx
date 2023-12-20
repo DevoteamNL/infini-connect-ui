@@ -135,10 +135,7 @@ const ChatHistoryDrawer = () => {
   const { logout, profile } = useAuthContext();
   const { threads, listThreads, createThread, loading, error } =
     useThreadContext();
-  const {
-    settings: { darkMode },
-    toggleDarkMode,
-  } = useSettings();
+  const { darkMode, toggleDarkMode } = useSettings();
 
   useEffect(() => {
     listThreads();

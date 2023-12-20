@@ -6,44 +6,34 @@ import {
   useState,
 } from "react";
 
-interface Settings {
-  darkMode: boolean;
-}
-
 interface SettingsContextProps {
-  settings: Settings;
+  darkMode: boolean;
   toggleDarkMode: () => void;
 }
 
-const SettingsContext = createContext<SettingsContextProps | undefined>(
-  undefined,
-);
+const savedSettings = localStorage.getItem("settings");
+const settings = savedSettings && JSON.parse(savedSettings);
+
+const SettingsContext = createContext<SettingsContextProps>({
+  darkMode: settings?.darkMode || false,
+  toggleDarkMode: () => {},
+});
 
 const SettingsProvider = ({ children }: { children: ReactNode }) => {
-  const [settings, setSettings] = useState<Settings>({
-    darkMode: false,
-  });
+  const [darkMode, setDarkMode] = useState<boolean>(
+    settings?.darkMode || false,
+  );
 
   useEffect(() => {
-    const savedSettings = localStorage.getItem("settings");
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("settings", JSON.stringify(settings));
-  }, [settings]);
+    localStorage.setItem("settings", JSON.stringify({ darkMode }));
+  }, [darkMode]);
 
   const toggleDarkMode = () => {
-    setSettings((prevSettings) => ({
-      ...prevSettings,
-      darkMode: !prevSettings.darkMode,
-    }));
+    setDarkMode((prevDarkMode) => !prevDarkMode);
   };
 
   return (
-    <SettingsContext.Provider value={{ settings, toggleDarkMode }}>
+    <SettingsContext.Provider value={{ darkMode, toggleDarkMode }}>
       {children}
     </SettingsContext.Provider>
   );

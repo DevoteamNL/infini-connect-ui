@@ -38,9 +38,7 @@ const Message = ({
   message?: string;
   caption: string;
 }) => {
-  const {
-    settings: { darkMode },
-  } = useSettings();
+  const { darkMode } = useSettings();
   return (
     <ListItem
       sx={{
