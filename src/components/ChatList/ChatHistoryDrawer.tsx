@@ -2,6 +2,7 @@ import { Delete, MoreHoriz } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
+import DriveFileRenameIcon from "@mui/icons-material/DriveFileRenameOutlineSharp";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
@@ -15,6 +16,7 @@ import {
   MenuItem,
   Skeleton,
   styled,
+  TextField,
 } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -26,7 +28,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
 import { Thread, useThreadContext } from "../../context/ThreadContext";
@@ -47,9 +49,17 @@ const Error = styled("div")(({ theme }) => ({
   flexDirection: "column",
 }));
 
+const RenameText = styled(TextField)(({ theme }) => ({
+  paddingBlock: theme.spacing(1),
+  paddingInline: theme.spacing(2),
+}));
+
 const ThreadItem = ({ thread }: { thread: Thread }) => {
-  const { setSelectedThread, selectedThreadId, deleteThread } =
+  const [renaming, setRenaming] = useState(false);
+  const [newTitle, setNewTitle] = useState(thread.title || "New Chat");
+  const { setSelectedThread, selectedThreadId, deleteThread, renameThread } =
     useThreadContext();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -69,12 +79,30 @@ const ThreadItem = ({ thread }: { thread: Thread }) => {
         </IconButton>
       }
     >
-      <ListItemButton
-        onClick={() => setSelectedThread(thread.id)}
-        selected={selectedThreadId === thread.id}
-      >
-        <ListItemText primary={thread.title} />
-      </ListItemButton>
+      {renaming ? (
+        <RenameText
+          variant="standard"
+          value={newTitle}
+          onChange={(event) => setNewTitle(event.target.value)}
+          inputRef={inputRef}
+          onBlur={() => {
+            setRenaming(false);
+            renameThread(thread.id, newTitle, thread.newThread);
+          }}
+          onKeyDown={(ev) => {
+            if (ev.key === "Enter") {
+              (ev.target as HTMLElement).blur();
+            }
+          }}
+        />
+      ) : (
+        <ListItemButton
+          onClick={() => setSelectedThread(thread.id)}
+          selected={selectedThreadId === thread.id}
+        >
+          <ListItemText primary={thread.title || "New Chat"} />
+        </ListItemButton>
+      )}
       <Menu anchorEl={anchorEl} onClose={() => handleClose()} open={open}>
         <MenuItem
           onClick={() => {
@@ -84,6 +112,19 @@ const ThreadItem = ({ thread }: { thread: Thread }) => {
         >
           <Delete sx={{ marginRight: 1 }} />
           Delete
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setRenaming(true);
+            setTimeout(() => {
+              inputRef.current?.focus();
+              inputRef.current?.select();
+            });
+            handleClose();
+          }}
+        >
+          <DriveFileRenameIcon sx={{ marginRight: 1 }} />
+          Rename
         </MenuItem>
       </Menu>
     </ListItem>

@@ -17,10 +17,16 @@ interface ThreadContextProps {
   listThreads: () => Promise<void>;
   createThread: () => Promise<void>;
   deleteThread: (id: number, newThread?: boolean) => Promise<void>;
+  renameThread: (
+    id: number,
+    title: string,
+    newThread?: boolean,
+  ) => Promise<void>;
   postMessage: (
     id: number,
     message: string,
     newThread?: boolean,
+    title?: string,
   ) => Promise<void>;
   setSelectedThread: (id: number) => void;
 }
@@ -36,7 +42,7 @@ interface Message {
 // Define the thread object
 interface Thread {
   id: number;
-  title: string;
+  title?: string;
   newThread?: boolean;
   messages: Array<Message>;
   loading: boolean;
@@ -55,6 +61,7 @@ type Action =
     }
   | { type: "ADD_THREAD"; payload: Thread }
   | { type: "DELETE_THREAD"; payload: number }
+  | { type: "SET_THREAD_TITLE"; payload: { id: number; title: string } }
   | {
       type: "ADD_MESSAGE";
       payload: { id: number; message: Message };
@@ -91,19 +98,32 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
           : thread,
       );
     case "DELETE_THREAD":
-      return state.filter((thread) => thread.id !== action.payload);
+      const withThreadRemoved = state.filter(
+        (thread) => thread.id !== action.payload,
+      );
+
+      return withThreadRemoved.length === 0
+        ? [constructNewThread()]
+        : withThreadRemoved;
     case "ADD_MESSAGE":
       return state.map((thread) =>
         thread.id === action.payload.id
           ? {
               ...thread,
-              title:
-                thread.messages.length === 0
-                  ? action.payload.message.data.content
-                  : thread.title,
+              title: thread.title || action.payload.message.data.content,
               messages: [...thread.messages, action.payload.message],
               loading: false,
               replying: action.payload.message.data.role === "user",
+            }
+          : thread,
+      );
+    case "SET_THREAD_TITLE":
+      return state.map((thread) =>
+        thread.id === action.payload.id
+          ? {
+              ...thread,
+              title: action.payload.title,
+              loading: false,
             }
           : thread,
       );
@@ -118,7 +138,6 @@ const ThreadContext = createContext<ThreadContextProps | undefined>(undefined);
 const constructNewThread = (): Thread => {
   return {
     id: Math.random(),
-    title: "New Chat",
     messages: [],
     loading: false,
     error: null,
@@ -226,9 +245,46 @@ const ThreadProvider = ({
     [authFetch],
   );
 
+  // Rename a thread by ID
+  const renameThread = useCallback(
+    async (id: number, title: string, newThread?: boolean) => {
+      dispatch({ type: "SET_THREAD_TITLE", payload: { id, title } });
+      if (newThread) {
+        return;
+      }
+      dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
+
+      try {
+        await authFetch({
+          threadId: id,
+          options: {
+            method: "PATCH",
+            body: JSON.stringify({
+              title: title,
+            }),
+            headers: { "Content-Type": "application/json" },
+          },
+        });
+
+        dispatch({ type: "SET_THREAD_TITLE", payload: { id, title } });
+      } catch (error) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: { id, error: "Failed to rename thread" },
+        });
+      }
+    },
+    [authFetch],
+  );
+
   // Post a message to a thread
   const postMessage = useCallback(
-    async (id: number, message: string, newThread?: boolean) => {
+    async (
+      id: number,
+      message: string,
+      newThread?: boolean,
+      title?: string,
+    ) => {
       dispatch({
         type: "ADD_MESSAGE",
         payload: {
@@ -247,7 +303,7 @@ const ThreadProvider = ({
             options: {
               method: "POST",
               body: JSON.stringify({
-                title: message.substring(0, 20),
+                title: title || message.substring(0, 20),
                 message,
               }),
               headers: { "Content-Type": "application/json" },
@@ -321,6 +377,7 @@ const ThreadProvider = ({
         deleteThread,
         postMessage,
         setSelectedThread,
+        renameThread,
       }}
     >
       {children}
