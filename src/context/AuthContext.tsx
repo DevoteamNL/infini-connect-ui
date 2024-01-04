@@ -7,6 +7,7 @@ import {
   useContext,
   useState,
 } from "react";
+import { useSettings } from "./SettingsContext";
 
 const parseJwt = (token?: string): { exp: number; picture: string } | null => {
   if (!token) {
@@ -42,6 +43,7 @@ const AuthContext = createContext({
 });
 
 const AuthProvider = ({ children }: { children: ReactNode[] | ReactNode }) => {
+  const { darkMode } = useSettings();
   const [profile, setProfile] = useState(parsedProfile);
   const [credential, setCredential] = useState<CredentialResponse | undefined>(
     parsedCookie,
@@ -91,6 +93,7 @@ const AuthProvider = ({ children }: { children: ReactNode[] | ReactNode }) => {
             onSuccess={onLogin}
             onError={console.error}
             auto_select={true}
+            theme={darkMode ? "filled_black" : "outline"}
           />
         </DialogContent>
       </Dialog>
