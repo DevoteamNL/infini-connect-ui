@@ -6,9 +6,11 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuthContext } from "../../context/AuthContext";
+import { useSettings } from "../../context/SettingsContext";
 
 const SignIn = () => {
   const { login } = useAuthContext();
+  const { darkMode } = useSettings();
 
   return (
     <Stack
@@ -23,7 +25,7 @@ const SignIn = () => {
       maxWidth="xs"
     >
       <CssBaseline />
-      <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
+      <Avatar sx={{ m: 1, bgcolor: "primary.main", color: "text.primary" }}>
         <LockOutlinedIcon />
       </Avatar>
       <Typography component="h1" variant="h5" marginBottom={8}>
@@ -35,6 +37,7 @@ const SignIn = () => {
           onSuccess={login}
           onError={console.error}
           auto_select={true}
+          theme={darkMode ? "filled_black" : "outline"}
         />
       </Box>
 

@@ -1,12 +1,17 @@
 import { Delete, MoreHoriz } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
 import DriveFileRenameIcon from "@mui/icons-material/DriveFileRenameOutlineSharp";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
+  Avatar,
   Button,
   Container,
+  Drawer,
   Fab,
+  ListItemButton,
   Menu,
   MenuItem,
   Skeleton,
@@ -17,30 +22,19 @@ import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
 import Divider from "@mui/material/Divider";
-import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
-import * as React from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
+import { useSettings } from "../../context/SettingsContext";
 import { Thread, useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 
 const drawerWidth = 300;
-const settings = ["Profile", "Account", "Dashboard"];
-
-interface Props {
-  /**
-   * Injected by the documentation to work in an iframe.
-   * Remove this when copying and pasting into your project.
-   */
-  window?: () => Window;
-}
 
 const Error = styled("div")(({ theme }) => ({
   color: theme.palette.error.main,
@@ -66,7 +60,7 @@ const ThreadItem = ({ thread }: { thread: Thread }) => {
   const { setSelectedThread, selectedThreadId, deleteThread, renameThread } =
     useThreadContext();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -137,25 +131,25 @@ const ThreadItem = ({ thread }: { thread: Thread }) => {
   );
 };
 
-export default function ChatHistoryDrawer(props: Props) {
-  const { logout } = useAuthContext();
+const ChatHistoryDrawer = () => {
+  const { logout, profile } = useAuthContext();
   const { threads, listThreads, createThread, loading, error } =
     useThreadContext();
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const { darkMode, toggleDarkMode } = useSettings();
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  React.useEffect(() => {
+  useEffect(() => {
     listThreads();
   }, [listThreads]);
 
-  const drawer = (
+  return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Box sx={{ overflowY: "auto", flexGrow: 1 }}>
         <Toolbar>
-          <img src="/static/images/devoteam_rgb.png" alt="logo" height="50px" />
+          <img
+            src={`/static/images/devoteam_rgb${darkMode ? "_white" : ""}.png`}
+            alt="logo"
+            height="50px"
+          />
         </Toolbar>
         <Divider />
         <Box sx={{ p: 2 }}>
@@ -194,26 +188,37 @@ export default function ChatHistoryDrawer(props: Props) {
       <Box>
         <Divider />
         <List>
-          {settings.map((text) => (
-            <ListItem key={text} disablePadding>
-              <ListItemButton>
-                <ListItemIcon></ListItemIcon>
-                <ListItemText primary={text} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-          <ListItem key="Logout" disablePadding>
+          <ListItem disablePadding>
+            <ListItemButton onClick={toggleDarkMode}>
+              <ListItemIcon>
+                {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+              </ListItemIcon>
+              <ListItemText primary={darkMode ? "Light mode" : "Dark mode"} />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
             <ListItemButton onClick={logout}>
               <ListItemIcon>
                 <LogoutIcon />
               </ListItemIcon>
               <ListItemText primary="Logout" />
+              <ListItemIcon>
+                <Avatar src={profile?.picture} />
+              </ListItemIcon>
             </ListItemButton>
           </ListItem>
         </List>
       </Box>
     </Box>
   );
+};
+
+export default function ChatHistory() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -258,7 +263,7 @@ export default function ChatHistoryDrawer(props: Props) {
             },
           }}
         >
-          {drawer}
+          <ChatHistoryDrawer />
         </Drawer>
         <Drawer
           variant="permanent"
@@ -271,7 +276,7 @@ export default function ChatHistoryDrawer(props: Props) {
           }}
           open
         >
-          {drawer}
+          <ChatHistoryDrawer />
         </Drawer>
       </Box>
       <ChatWindow />

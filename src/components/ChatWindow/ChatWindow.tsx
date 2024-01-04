@@ -12,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
+import { useSettings } from "../../context/SettingsContext";
 import { Thread, useThreadContext } from "../../context/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
 
@@ -37,6 +38,7 @@ const Message = ({
   message?: string;
   caption: string;
 }) => {
+  const { darkMode } = useSettings();
   return (
     <ListItem
       sx={{
@@ -48,11 +50,15 @@ const Message = ({
         sx={{
           p: 1,
           maxWidth: "70%",
-          bgcolor: sender
-            ? "rgba(173, 216, 230, 0.5)"
-            : "rgba(211, 211, 211, 0.5)",
+          bgcolor: darkMode
+            ? sender
+              ? "#4a8cca"
+              : "#2e2e2e"
+            : sender
+              ? "#d7ebe7"
+              : "#efeeee",
           border: 1,
-          borderColor: "grey.300",
+          borderColor: darkMode ? "grey.800" : "grey.300",
           borderRadius: 2,
         }}
       >
