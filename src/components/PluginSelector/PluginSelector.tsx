@@ -7,9 +7,9 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import OutlinedInput from "@mui/material/OutlinedInput";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
-import { Theme, useTheme } from "@mui/material/styles";
+import Select from "@mui/material/Select";
 import * as React from "react";
+import { useAuthContext } from "../../context/AuthContext";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -22,36 +22,42 @@ const MenuProps = {
   },
 };
 
-const names = [
-  "Joan",
-  "DevoteamNL",
-  "DevoteamPortugal",
-  "ElasticSearch",
-  "SmartRecruiters",
-];
+export default function PluginSelector({
+  disabled,
+  plugin,
+  onPluginChange,
+}: {
+  disabled?: boolean;
+  plugin: string;
+  onPluginChange: (plugin: string) => void;
+}) {
+  const [plugins, setPlugins] = React.useState<
+    { displayName: string; name: string }[]
+  >([]);
 
-function getStyles(name: string, personName: readonly string[], theme: Theme) {
-  return {
-    fontWeight:
-      personName.indexOf(name) === -1
-        ? theme.typography.fontWeightRegular
-        : theme.typography.fontWeightMedium,
-  };
-}
+  const { credential, checkExpired } = useAuthContext();
 
-export default function PluginSelector({ disabled }: { disabled?: boolean }) {
-  const theme = useTheme();
-  const [personName, setPersonName] = React.useState<string[]>([]);
+  React.useEffect(() => {
+    const expired = checkExpired();
+    if (expired) {
+      return;
+    }
+    const url = new URL(process.env.REACT_APP_API_BASE_URL || "");
+    url.pathname = "api/plugin/";
 
-  const handleChange = (event: SelectChangeEvent<typeof personName>) => {
-    const {
-      target: { value },
-    } = event;
-    setPersonName(
-      // On autofill we get a stringified value.
-      typeof value === "string" ? value.split(",") : value,
-    );
-  };
+    fetch(url, {
+      headers: {
+        Authorization: `Bearer ${credential?.credential}`,
+      },
+    }).then((response) => {
+      if (!response.ok) {
+        throw new Error("Failed to fetch");
+      }
+      response.json().then((data) => {
+        setPlugins(data);
+      });
+    });
+  }, [checkExpired, credential?.credential]);
 
   return (
     <Box>
@@ -62,26 +68,22 @@ export default function PluginSelector({ disabled }: { disabled?: boolean }) {
             disabled={disabled}
             labelId="demo-multiple-chip-label"
             id="demo-multiple-chip"
-            multiple
-            value={personName}
-            onChange={handleChange}
+            value={plugin}
+            onChange={(event) => onPluginChange(event.target.value as string)}
             input={<OutlinedInput id="select-multiple-chip" label="Plugin" />}
             renderValue={(selected) => (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                {selected.map((value) => (
-                  <Chip key={value} label={value} />
-                ))}
+                <Chip
+                  key={selected}
+                  label={plugins.find((p) => p.name === selected)?.displayName}
+                />
               </Box>
             )}
             MenuProps={MenuProps}
           >
-            {names.map((name) => (
-              <MenuItem
-                key={name}
-                value={name}
-                style={getStyles(name, personName, theme)}
-              >
-                {name}
+            {plugins.map(({ displayName, name }) => (
+              <MenuItem key={name} value={name}>
+                {displayName}
               </MenuItem>
             ))}
           </Select>
