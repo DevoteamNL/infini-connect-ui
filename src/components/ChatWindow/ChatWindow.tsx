@@ -1,12 +1,15 @@
+import { ThumbDown, ThumbUp } from "@mui/icons-material";
 import SendIcon from "@mui/icons-material/Send";
 import {
   Box,
+  Button,
   Grid,
   IconButton,
   List,
   ListItem,
   Paper,
   Skeleton,
+  Stack,
   styled,
   TextField,
   Typography,
@@ -78,6 +81,9 @@ const Message = ({
 
 // MainContent component
 const MainContent: React.FC<MainContentProps> = () => {
+  const [addingFeedback, setAddingFeedback] = useState<
+    "positive" | "negative" | "neutral" | undefined
+  >();
   const { postMessage, threads, selectedThreadId } = useThreadContext();
   // State for the chat message and text field rows
   const [message, setMessage] = useState("");
@@ -97,19 +103,24 @@ const MainContent: React.FC<MainContentProps> = () => {
   // Effect for auto-scrolling to the latest message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, addingFeedback]);
 
   // Function to handle sending a message
   const handleSendMessage = () => {
-    if (message && selectedThread && !selectedThread.loading) {
+    if (!message || !selectedThread || selectedThread.loading) return;
+
+    if (addingFeedback) {
+      // TODO: send feedback
+      setAddingFeedback(undefined);
+    } else {
       postMessage(
         selectedThread.id,
         message,
         selectedThread.newThread,
         selectedThread.title,
       );
-      setMessage("");
     }
+    setMessage("");
   };
 
   // JSX for the MainContent component
@@ -169,8 +180,51 @@ const MainContent: React.FC<MainContentProps> = () => {
                 caption={new Date().toLocaleTimeString() /** Mock sent date */}
               ></Message>
             ))}
-            {selectedThread?.replying && (
+
+            {selectedThread?.replying ? (
               <Message sender={false} caption="thinking..."></Message>
+            ) : addingFeedback ? (
+              <>
+                <Message
+                  sender={false}
+                  caption=""
+                  message={`Can you share a bit more info on what you ${
+                    {
+                      neutral: "think of",
+                      negative: "dislike about",
+                      positive: "like about",
+                    }[addingFeedback]
+                  } the previous response or your general experience with the app?`}
+                ></Message>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  paddingX={2}
+                  justifyContent={"flex-end"}
+                >
+                  <Button onClick={() => setAddingFeedback(undefined)}>
+                    Cancel feedback
+                  </Button>
+                </Stack>
+              </>
+            ) : (
+              <Stack
+                direction="row"
+                spacing={1}
+                paddingX={2}
+                justifyContent={"flex-end"}
+              >
+                <Button onClick={() => setAddingFeedback("neutral")}>
+                  How was this response?
+                </Button>
+
+                <IconButton onClick={() => setAddingFeedback("negative")}>
+                  <ThumbDown />
+                </IconButton>
+                <IconButton onClick={() => setAddingFeedback("positive")}>
+                  <ThumbUp />
+                </IconButton>
+              </Stack>
             )}
             <div ref={chatEndRef} />
           </List>
