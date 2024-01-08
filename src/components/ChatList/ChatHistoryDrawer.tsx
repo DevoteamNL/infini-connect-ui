@@ -15,8 +15,8 @@ import {
   Menu,
   MenuItem,
   Skeleton,
-  TextField,
   styled,
+  TextField,
 } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -38,7 +38,7 @@ const drawerWidth = 300;
 
 const Error = styled("div")(({ theme }) => ({
   color: theme.palette.error.main,
-  backgroundColor: theme.palette.error.contrastText,
+  backgroundColor: theme.palette.background.default,
   border: `1px solid ${theme.palette.error.light}`,
   borderRadius: theme.shape.borderRadius,
   padding: theme.spacing(1),
