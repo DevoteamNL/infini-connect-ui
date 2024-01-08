@@ -1,5 +1,5 @@
 import { PaletteMode, ThemeProvider } from "@mui/material";
-import { createTheme, StyledEngineProvider } from "@mui/material/styles";
+import { StyledEngineProvider, createTheme } from "@mui/material/styles";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ReactNode, StrictMode, useMemo } from "react";
 import ReactDOM from "react-dom/client";

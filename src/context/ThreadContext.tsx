@@ -97,7 +97,7 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
             }
           : thread,
       );
-    case "DELETE_THREAD":
+    case "DELETE_THREAD": {
       const withThreadRemoved = state.filter(
         (thread) => thread.id !== action.payload,
       );
@@ -105,6 +105,7 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
       return withThreadRemoved.length === 0
         ? [constructNewThread()]
         : withThreadRemoved;
+    }
     case "ADD_MESSAGE":
       return state.map((thread) =>
         thread.id === action.payload.id
@@ -319,10 +320,12 @@ const ThreadProvider = ({
               id: id,
               thread: {
                 ...newThread,
-                messages: newThread.messages.map((message: any) => ({
-                  id: Math.random(),
-                  data: message,
-                })),
+                messages: newThread.messages.map(
+                  (message: Message["data"]) => ({
+                    id: Math.random(),
+                    data: message,
+                  }),
+                ),
               },
             },
           });
