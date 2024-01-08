@@ -1,5 +1,9 @@
+import "@fontsource/montserrat/300.css";
+import "@fontsource/montserrat/400.css";
+import "@fontsource/montserrat/500.css";
+import "@fontsource/montserrat/700.css";
 import { PaletteMode, ThemeProvider } from "@mui/material";
-import { StyledEngineProvider, createTheme } from "@mui/material/styles";
+import { createTheme, StyledEngineProvider } from "@mui/material/styles";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ReactNode, StrictMode, useMemo } from "react";
 import ReactDOM from "react-dom/client";

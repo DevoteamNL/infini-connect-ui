@@ -15,6 +15,6 @@ export const devoteamDesignTokens = (mode: PaletteMode) => ({
     },
   },
   typography: {
-    fontFamily: "Montserrat",
+    fontFamily: ["Montserrat", "Calibri", "Arial", "sans-serif"].join(","),
   },
 });
