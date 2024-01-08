@@ -15,13 +15,18 @@ interface ThreadContextProps {
   error: string;
   selectedThreadId?: number;
   listThreads: () => Promise<void>;
-  getThreadById: (id: number) => Promise<void>;
   createThread: () => Promise<void>;
-  deleteThread: (id: number) => Promise<void>;
+  deleteThread: (id: number, newThread?: boolean) => Promise<void>;
+  renameThread: (
+    id: number,
+    title: string,
+    newThread?: boolean,
+  ) => Promise<void>;
   postMessage: (
     id: number,
     message: string,
     newThread?: boolean,
+    title?: string,
   ) => Promise<void>;
   setSelectedThread: (id: number) => void;
 }
@@ -37,7 +42,7 @@ interface Message {
 // Define the thread object
 interface Thread {
   id: number;
-  title: string;
+  title?: string;
   newThread?: boolean;
   messages: Array<Message>;
   loading: boolean;
@@ -51,11 +56,12 @@ type Action =
   | { type: "SET_LOADING"; payload: { id: number; loading: boolean } }
   | { type: "SET_ERROR"; payload: { id: number; error: string } }
   | {
-      type: "SET_THREAD_MESSAGES";
-      payload: { id: number; messages: Array<Message> };
+      type: "SET_THREAD";
+      payload: { id: number; thread: Thread };
     }
   | { type: "ADD_THREAD"; payload: Thread }
   | { type: "DELETE_THREAD"; payload: number }
+  | { type: "SET_THREAD_TITLE"; payload: { id: number; title: string } }
   | {
       type: "ADD_MESSAGE";
       payload: { id: number; message: Message };
@@ -65,21 +71,26 @@ type Action =
 const threadReducer = (state: Thread[], action: Action): Thread[] => {
   switch (action.type) {
     case "SET_THREADS":
-      return action.payload;
+      return [...state.filter((thread) => thread.newThread), ...action.payload];
     case "SET_ERROR":
       return state.map((thread) =>
         thread.id === action.payload.id
           ? { ...thread, error: action.payload.error, loading: false }
           : thread,
       );
+    case "SET_LOADING":
+      return state.map((thread) =>
+        thread.id === action.payload.id
+          ? { ...thread, error: null, loading: true }
+          : thread,
+      );
     case "ADD_THREAD":
       return [...state, action.payload];
-    case "SET_THREAD_MESSAGES":
+    case "SET_THREAD":
       return state.map((thread) =>
         thread.id === action.payload.id
           ? {
-              ...thread,
-              messages: action.payload.messages,
+              ...action.payload.thread,
               loading: false,
               newThread: false,
               replying: false,
@@ -87,19 +98,32 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
           : thread,
       );
     case "DELETE_THREAD":
-      return state.filter((thread) => thread.id !== action.payload);
+      const withThreadRemoved = state.filter(
+        (thread) => thread.id !== action.payload,
+      );
+
+      return withThreadRemoved.length === 0
+        ? [constructNewThread()]
+        : withThreadRemoved;
     case "ADD_MESSAGE":
       return state.map((thread) =>
         thread.id === action.payload.id
           ? {
               ...thread,
-              title:
-                thread.messages.length === 0
-                  ? action.payload.message.data.content
-                  : thread.title,
+              title: thread.title || action.payload.message.data.content,
               messages: [...thread.messages, action.payload.message],
               loading: false,
               replying: action.payload.message.data.role === "user",
+            }
+          : thread,
+      );
+    case "SET_THREAD_TITLE":
+      return state.map((thread) =>
+        thread.id === action.payload.id
+          ? {
+              ...thread,
+              title: action.payload.title,
+              loading: false,
             }
           : thread,
       );
@@ -111,13 +135,23 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
 // Create the thread context
 const ThreadContext = createContext<ThreadContextProps | undefined>(undefined);
 
+const constructNewThread = (): Thread => {
+  return {
+    id: Math.random(),
+    messages: [],
+    loading: false,
+    error: null,
+    newThread: true,
+  };
+};
+
 // Create the thread provider
 const ThreadProvider = ({
   children,
 }: {
   children: ReactNode[] | ReactNode;
 }) => {
-  const [threads, dispatch] = useReducer(threadReducer, []);
+  const [threads, dispatch] = useReducer(threadReducer, [constructNewThread()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedThread, setSelectedThread] = useState<number | undefined>();
@@ -169,64 +203,38 @@ const ThreadProvider = ({
       }
       const threads = await response.json();
       dispatch({ type: "SET_THREADS", payload: threads });
-      setSelectedThread(threads[0]?.id);
       setLoading(false);
     } catch (error) {
       setError("Failed to fetch threads");
     }
   }, [authFetch]);
 
-  // Fetch a thread by ID
-  const getThreadById = useCallback(
-    async (id: number) => {
-      dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
-
-      try {
-        const response = await authFetch({ threadId: id });
-        if (!response) {
-          return;
-        }
-        dispatch({ type: "SET_THREADS", payload: await response.json() });
-      } catch (error) {
-        dispatch({
-          type: "SET_ERROR",
-          payload: { id, error: "Failed to fetch thread" },
-        });
-      }
-    },
-    [authFetch],
-  );
-
   // Create a new thread
   const createThread = async () => {
-    const tempId = Math.random();
+    const newThread = constructNewThread();
     dispatch({
       type: "ADD_THREAD",
-      payload: {
-        id: tempId,
-        title: "New Chat",
-        messages: [],
-        loading: false,
-        error: null,
-        newThread: true,
-      },
+      payload: newThread,
     });
-    setSelectedThread(tempId);
+    setSelectedThread(newThread.id);
   };
 
   // Delete a thread by ID
   const deleteThread = useCallback(
-    async (id: number) => {
+    async (id: number, newThread?: boolean) => {
       dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
 
       try {
-        await authFetch({
-          threadId: id,
-          options: {
-            method: "DELETE",
-          },
-        });
+        if (!newThread) {
+          await authFetch({
+            threadId: id,
+            options: {
+              method: "DELETE",
+            },
+          });
+        }
         dispatch({ type: "DELETE_THREAD", payload: id });
+        setSelectedThread(undefined);
       } catch (error) {
         dispatch({
           type: "SET_ERROR",
@@ -237,9 +245,46 @@ const ThreadProvider = ({
     [authFetch],
   );
 
+  // Rename a thread by ID
+  const renameThread = useCallback(
+    async (id: number, title: string, newThread?: boolean) => {
+      dispatch({ type: "SET_THREAD_TITLE", payload: { id, title } });
+      if (newThread) {
+        return;
+      }
+      dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
+
+      try {
+        await authFetch({
+          threadId: id,
+          options: {
+            method: "PATCH",
+            body: JSON.stringify({
+              title: title,
+            }),
+            headers: { "Content-Type": "application/json" },
+          },
+        });
+
+        dispatch({ type: "SET_THREAD_TITLE", payload: { id, title } });
+      } catch (error) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: { id, error: "Failed to rename thread" },
+        });
+      }
+    },
+    [authFetch],
+  );
+
   // Post a message to a thread
   const postMessage = useCallback(
-    async (id: number, message: string, newThread?: boolean) => {
+    async (
+      id: number,
+      message: string,
+      newThread?: boolean,
+      title?: string,
+    ) => {
       dispatch({
         type: "ADD_MESSAGE",
         payload: {
@@ -258,7 +303,7 @@ const ThreadProvider = ({
             options: {
               method: "POST",
               body: JSON.stringify({
-                title: message.substring(0, 20),
+                title: title || message.substring(0, 20),
                 message,
               }),
               headers: { "Content-Type": "application/json" },
@@ -269,15 +314,19 @@ const ThreadProvider = ({
           }
           const newThread = await response.json();
           dispatch({
-            type: "SET_THREAD_MESSAGES",
+            type: "SET_THREAD",
             payload: {
               id: id,
-              messages: newThread.map((message: any) => ({
-                id: Math.random(),
-                data: message,
-              })),
+              thread: {
+                ...newThread,
+                messages: newThread.messages.map((message: any) => ({
+                  id: Math.random(),
+                  data: message,
+                })),
+              },
             },
           });
+          setSelectedThread(newThread.id);
         } catch (error) {
           dispatch({
             type: "SET_ERROR",
@@ -322,13 +371,13 @@ const ThreadProvider = ({
         threads,
         loading,
         error,
-        selectedThreadId: selectedThread,
+        selectedThreadId: selectedThread || threads[0]?.id,
         listThreads,
-        getThreadById,
         createThread,
         deleteThread,
         postMessage,
         setSelectedThread,
+        renameThread,
       }}
     >
       {children}

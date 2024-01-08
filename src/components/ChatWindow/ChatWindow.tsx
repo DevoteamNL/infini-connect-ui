@@ -12,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
+import { useSettings } from "../../context/SettingsContext";
 import { Thread, useThreadContext } from "../../context/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
 
@@ -37,6 +38,7 @@ const Message = ({
   message?: string;
   caption: string;
 }) => {
+  const { darkMode } = useSettings();
   return (
     <ListItem
       sx={{
@@ -48,11 +50,15 @@ const Message = ({
         sx={{
           p: 1,
           maxWidth: "70%",
-          bgcolor: sender
-            ? "rgba(173, 216, 230, 0.5)"
-            : "rgba(211, 211, 211, 0.5)",
+          bgcolor: darkMode
+            ? sender
+              ? "#4a8cca"
+              : "#2e2e2e"
+            : sender
+              ? "#d7ebe7"
+              : "#efeeee",
           border: 1,
-          borderColor: "grey.300",
+          borderColor: darkMode ? "grey.800" : "grey.300",
           borderRadius: 2,
         }}
       >
@@ -95,8 +101,13 @@ const MainContent: React.FC<MainContentProps> = () => {
 
   // Function to handle sending a message
   const handleSendMessage = () => {
-    if (message && selectedThread) {
-      postMessage(selectedThread.id, message, selectedThread.newThread);
+    if (message && selectedThread && !selectedThread.loading) {
+      postMessage(
+        selectedThread.id,
+        message,
+        selectedThread.newThread,
+        selectedThread.title,
+      );
       setMessage("");
     }
   };
@@ -152,6 +163,7 @@ const MainContent: React.FC<MainContentProps> = () => {
           <List>
             {messages?.map((msg) => (
               <Message
+                key={msg.id}
                 sender={msg.data.role === "user"}
                 message={msg.data.content}
                 caption={new Date().toLocaleTimeString() /** Mock sent date */}
@@ -184,7 +196,10 @@ const MainContent: React.FC<MainContentProps> = () => {
           onChange={(e) => setMessage(e.target.value)}
           InputProps={{
             endAdornment: (
-              <IconButton onClick={handleSendMessage}>
+              <IconButton
+                onClick={handleSendMessage}
+                disabled={selectedThread?.loading}
+              >
                 <SendIcon />
               </IconButton>
             ),
