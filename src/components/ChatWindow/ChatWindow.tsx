@@ -91,6 +91,8 @@ const MainContent: React.FC<MainContentProps> = () => {
   const selectedThread = threads.find((t) => t.id === selectedThreadId);
   const messages = selectedThread?.messages;
 
+  const [plugin, setPlugin] = useState<string>("");
+
   // Ref for scrolling to the bottom of the chat
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -118,6 +120,7 @@ const MainContent: React.FC<MainContentProps> = () => {
         message,
         selectedThread.newThread,
         selectedThread.title,
+        plugin,
       );
     }
     setMessage("");
@@ -138,6 +141,8 @@ const MainContent: React.FC<MainContentProps> = () => {
       <br />
       <br />
       <PluginSelector
+        plugin={selectedThread?.plugin || plugin}
+        onPluginChange={setPlugin}
         disabled={selectedThread?.messages.some(
           (message) => message.data.role === "user",
         )}

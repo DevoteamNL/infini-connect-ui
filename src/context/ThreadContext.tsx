@@ -27,6 +27,7 @@ interface ThreadContextProps {
     message: string,
     newThread?: boolean,
     title?: string,
+    plugin?: string,
   ) => Promise<void>;
   setSelectedThread: (id: number) => void;
 }
@@ -48,6 +49,7 @@ interface Thread {
   loading: boolean;
   error: string | null;
   replying?: boolean;
+  plugin?: string;
 }
 
 // Define the action types
@@ -285,6 +287,7 @@ const ThreadProvider = ({
       message: string,
       newThread?: boolean,
       title?: string,
+      plugin?: string,
     ) => {
       dispatch({
         type: "ADD_MESSAGE",
@@ -306,6 +309,7 @@ const ThreadProvider = ({
               body: JSON.stringify({
                 title: title || message.substring(0, 20),
                 message,
+                plugin,
               }),
               headers: { "Content-Type": "application/json" },
             },
