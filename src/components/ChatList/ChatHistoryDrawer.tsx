@@ -15,8 +15,8 @@ import {
   Menu,
   MenuItem,
   Skeleton,
-  styled,
   TextField,
+  styled,
 } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -29,9 +29,9 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import { useEffect, useRef, useState } from "react";
+import { Thread, useThreadSelectors } from "../../ThreadStore";
 import { useAuthContext } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
-import { Thread, useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 
 const drawerWidth = 300;
@@ -57,8 +57,18 @@ const RenameText = styled(TextField)(({ theme }) => ({
 const ThreadItem = ({ thread }: { thread: Thread }) => {
   const [renaming, setRenaming] = useState(false);
   const [newTitle, setNewTitle] = useState(thread.title || "New Chat");
-  const { setSelectedThread, selectedThreadId, deleteThread, renameThread } =
-    useThreadContext();
+
+  const { authFetch } = useAuthContext();
+
+  const selectors = useThreadSelectors();
+  const threads = selectors.threads();
+  const selectedThreadId =
+    selectors.selectedThreadId() || Array.from(threads.values())[0].id;
+
+  const setSelectedThread = selectors.setSelectedThread();
+  const renameThread = selectors.renameThread();
+  const deleteThread = selectors.deleteThread();
+
   const inputRef = useRef<HTMLInputElement>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -87,7 +97,7 @@ const ThreadItem = ({ thread }: { thread: Thread }) => {
           inputRef={inputRef}
           onBlur={() => {
             setRenaming(false);
-            renameThread(thread.id, newTitle, thread.newThread);
+            renameThread(authFetch, thread.id, newTitle);
           }}
           onKeyDown={(ev) => {
             if (ev.key === "Enter") {
@@ -106,7 +116,7 @@ const ThreadItem = ({ thread }: { thread: Thread }) => {
       <Menu anchorEl={anchorEl} onClose={() => handleClose()} open={open}>
         <MenuItem
           onClick={() => {
-            deleteThread(thread.id, thread.newThread);
+            deleteThread(authFetch, thread.id);
             handleClose();
           }}
         >
@@ -133,13 +143,21 @@ const ThreadItem = ({ thread }: { thread: Thread }) => {
 
 const ChatHistoryDrawer = () => {
   const { logout, profile } = useAuthContext();
-  const { threads, listThreads, createThread, loading, error } =
-    useThreadContext();
+
+  const { authFetch } = useAuthContext();
+
+  const selectors = useThreadSelectors();
+  const createThread = selectors.createThread();
+  const listThreads = selectors.listThreads();
+  const error = selectors.error();
+  const loading = selectors.loading();
+  const threads = selectors.threads();
+
   const { darkMode, toggleDarkMode } = useSettings();
 
   useEffect(() => {
-    listThreads();
-  }, [listThreads]);
+    listThreads(authFetch);
+  }, [listThreads, authFetch]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -167,7 +185,7 @@ const ChatHistoryDrawer = () => {
           <Container>
             <Error>
               {error}
-              <Button onClick={() => listThreads()}>Retry</Button>
+              <Button onClick={() => listThreads(authFetch)}>Retry</Button>
             </Error>
           </Container>
         ) : (
@@ -177,7 +195,7 @@ const ChatHistoryDrawer = () => {
                 <Skeleton sx={{ flexGrow: 1, fontSize: "1rem" }} />
               </ListItem>
             ))}
-            {threads.map((thread) => (
+            {Array.from(threads.values()).map((thread) => (
               <ThreadItem key={thread.id} thread={thread} />
             ))}
           </List>

@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogTitle } from "@mui/material";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import {
+  ContextType,
   ReactNode,
   createContext,
   useCallback,
@@ -40,7 +41,13 @@ const AuthContext = createContext({
   logout: () => {},
   credential: parsedCookie,
   checkExpired: (): boolean => false,
+  authFetch: async (_params: {
+    pathname: string;
+    options?: RequestInit;
+  }): Promise<Response | undefined> => undefined,
 });
+
+export type AuthFetch = ContextType<typeof AuthContext>["authFetch"];
 
 const AuthProvider = ({ children }: { children: ReactNode[] | ReactNode }) => {
   const { darkMode } = useSettings();
@@ -65,6 +72,30 @@ const AuthProvider = ({ children }: { children: ReactNode[] | ReactNode }) => {
     return false;
   }, [profile]);
 
+  const authFetch = useCallback(
+    async (params: { pathname: string; options?: RequestInit }) => {
+      const expired = checkExpired();
+      if (expired) {
+        return;
+      }
+      const url = new URL(import.meta.env.VITE_API_BASE_URL || "");
+      url.pathname = params.pathname;
+
+      const response = await fetch(url, {
+        ...params.options,
+        headers: {
+          ...(params.options?.headers || {}),
+          Authorization: `Bearer ${credential?.credential}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch");
+      }
+      return response;
+    },
+    [checkExpired, credential?.credential],
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -78,6 +109,7 @@ const AuthProvider = ({ children }: { children: ReactNode[] | ReactNode }) => {
         },
         credential: credential,
         checkExpired: checkExpired,
+        authFetch: authFetch,
       }}
     >
       <Dialog

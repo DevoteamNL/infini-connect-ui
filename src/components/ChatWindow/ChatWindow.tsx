@@ -10,19 +10,15 @@ import {
   Paper,
   Skeleton,
   Stack,
-  styled,
   TextField,
   Typography,
+  styled,
 } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useThreadSelectors } from "../../ThreadStore";
+import { useAuthContext } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
-import { Thread, useThreadContext } from "../../context/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
-
-// Define the MainContentProps interface for the component's props
-interface MainContentProps {
-  thread?: Thread;
-}
 
 const Welcome = styled("p")(({ theme }) => ({
   ...theme.typography.body1,
@@ -80,15 +76,22 @@ const Message = ({
 };
 
 // MainContent component
-const MainContent: React.FC<MainContentProps> = () => {
+const MainContent = () => {
   const [addingFeedback, setAddingFeedback] = useState<
     "positive" | "negative" | "neutral" | undefined
   >();
-  const { postMessage, threads, selectedThreadId } = useThreadContext();
+  const { authFetch } = useAuthContext();
+
+  const selectors = useThreadSelectors();
+  const selectedThreadId = selectors.selectedThreadId();
+  const threads = selectors.threads();
+  const postMessage = selectors.postMessage();
   // State for the chat message and text field rows
   const [message, setMessage] = useState("");
   const [rows, setRows] = useState(3);
-  const selectedThread = threads.find((t) => t.id === selectedThreadId);
+  const selectedThread = selectedThreadId
+    ? threads.get(selectedThreadId)
+    : Array.from(threads.values())[0];
   const messages = selectedThread?.messages;
 
   const [plugin, setPlugin] = useState<string>("");
@@ -115,13 +118,7 @@ const MainContent: React.FC<MainContentProps> = () => {
       // TODO: send feedback
       setAddingFeedback(undefined);
     } else {
-      postMessage(
-        selectedThread.id,
-        message,
-        selectedThread.newThread,
-        selectedThread.title,
-        plugin,
-      );
+      postMessage(authFetch, selectedThread.id, message, plugin);
     }
     setMessage("");
   };
