@@ -1,34 +1,32 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Vite website to Static Web App - dvt-devo-infini-connect-ui
-
+name: Build and Push docker image to Azure Container Registry
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+        # Add support for more platforms with QEMU (optional)
+        # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
         with:
-          node-version: "18.x"
-
-      - name: Build And Deploy
-        id: builddeploy
-        uses: Azure/static-web-apps-deploy@v1
+          login-server: ${{ secrets.REGISTRY_NAME }}.azurecr.io
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations (i.e. PR comments)
-          action: "upload"
-          ###### Repository/Build Configurations ######
-          app_location: "/" # App source code path relative to repository root
-          output_location: "dist" # Built app content directory, relative to app_location - optional
-          ###### End of Repository/Build Configurations #######
+          push: true
+          tags: ${{ secrets.REGISTRY_NAME }}.azurecr.io/infini-connect-ui:latest
