@@ -66,7 +66,7 @@ type Action =
   | { type: "SET_THREAD_TITLE"; payload: { id: number; title: string } }
   | {
       type: "ADD_MESSAGE";
-      payload: { id: number; message: Message };
+      payload: Message ;
     };
 
 // Define the reducer function
@@ -112,14 +112,20 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
       return state.map((thread) =>
         thread.id === action.payload.id
           ? {
-              ...thread,
-              title: thread.title || action.payload.message.data.content,
-              messages: [...thread.messages, action.payload.message],
-              loading: false,
-              replying: action.payload.message.data.role === "user",
-            }
+            ...thread,
+            messages: [
+              ...thread.messages,
+              {
+                id: action.payload.id, // Use the ID from the action payload
+                data: action.payload.data, // Use the data from the action payload
+              },
+            ],
+            loading: false,
+            replying: action.payload.data.role === "user",
+          }
           : thread,
       );
+
     case "SET_THREAD_TITLE":
       return state.map((thread) =>
         thread.id === action.payload.id
@@ -292,12 +298,9 @@ const ThreadProvider = ({
       dispatch({
         type: "ADD_MESSAGE",
         payload: {
-          id,
-          message: {
             id: Math.random(),
             data: { role: "user", content: message },
           },
-        },
       });
       dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
 
@@ -324,15 +327,14 @@ const ThreadProvider = ({
               id: id,
               thread: {
                 ...newThread,
-                messages: newThread.messages.map(
-                  (message: Message["data"]) => ({
-                    id: Math.random(),
-                    data: message,
-                  }),
-                ),
+                messages: newThread.messages.map((message:Message)  => ({
+                  id: message.id, // Map each message ID
+                  data: message.data, // Map each message data
+                })),
               },
             },
           });
+
           setSelectedThread(newThread.id);
         } catch (error) {
           dispatch({
@@ -359,8 +361,12 @@ const ThreadProvider = ({
         const reply = await response.json();
         dispatch({
           type: "ADD_MESSAGE",
-          payload: { id, message: { id: Math.random(), data: reply } },
+          payload: {
+            id: reply.id, // Use the ID from the reply
+            data: reply.data, // Use the data from the reply
+          },
         });
+
       } catch (error) {
         dispatch({
           type: "SET_ERROR",
