@@ -10,11 +10,12 @@ import {
   Paper,
   Skeleton,
   Stack,
-  styled,
   TextField,
   Typography,
+  styled,
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
+import { useAuthContext } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
 import { Thread, useThreadContext } from "../../context/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
@@ -79,10 +80,18 @@ const Message = ({
   );
 };
 
+export enum FeedbackRating {
+  BAD = 2,
+  NEUTRAL = 3,
+  GOOD = 4,
+}
+
 // MainContent component
 const MainContent: React.FC<MainContentProps> = () => {
+  const { credential, checkExpired } = useAuthContext();
+
   const [addingFeedback, setAddingFeedback] = useState<
-    "positive" | "negative" | "neutral" | undefined
+    FeedbackRating | undefined
   >();
   const { postMessage, threads, selectedThreadId } = useThreadContext();
   // State for the chat message and text field rows
@@ -107,12 +116,37 @@ const MainContent: React.FC<MainContentProps> = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, addingFeedback]);
 
+  const sendFeedback = () => {
+    if (checkExpired()) return;
+    const messageId = messages?.[messages.length - 1].id;
+    if (!messageId) return;
+
+    const url = new URL(import.meta.env.VITE_API_BASE_URL || "");
+    url.pathname = `api/message/${messageId}/feedback`;
+
+    fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${credential?.credential}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: message,
+        rating: addingFeedback,
+      }),
+    }).then((response) => {
+      if (!response.ok) {
+        throw new Error("Failed to fetch");
+      }
+    });
+  };
+
   // Function to handle sending a message
   const handleSendMessage = () => {
     if (!message || !selectedThread || selectedThread.loading) return;
 
     if (addingFeedback) {
-      // TODO: send feedback
+      sendFeedback();
       setAddingFeedback(undefined);
     } else {
       postMessage(
@@ -195,9 +229,9 @@ const MainContent: React.FC<MainContentProps> = () => {
                   caption=""
                   message={`Can you share a bit more info on what you ${
                     {
-                      neutral: "think of",
-                      negative: "dislike about",
-                      positive: "like about",
+                      [FeedbackRating.NEUTRAL]: "think of",
+                      [FeedbackRating.BAD]: "dislike about",
+                      [FeedbackRating.GOOD]: "like about",
                     }[addingFeedback]
                   } the previous response or your general experience with the app?`}
                 ></Message>
@@ -219,14 +253,20 @@ const MainContent: React.FC<MainContentProps> = () => {
                 paddingX={2}
                 justifyContent={"flex-end"}
               >
-                <Button onClick={() => setAddingFeedback("neutral")}>
+                <Button
+                  onClick={() => setAddingFeedback(FeedbackRating.NEUTRAL)}
+                >
                   How was this response?
                 </Button>
 
-                <IconButton onClick={() => setAddingFeedback("negative")}>
+                <IconButton
+                  onClick={() => setAddingFeedback(FeedbackRating.BAD)}
+                >
                   <ThumbDown />
                 </IconButton>
-                <IconButton onClick={() => setAddingFeedback("positive")}>
+                <IconButton
+                  onClick={() => setAddingFeedback(FeedbackRating.GOOD)}
+                >
                   <ThumbUp />
                 </IconButton>
               </Stack>

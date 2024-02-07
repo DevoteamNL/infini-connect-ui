@@ -322,15 +322,7 @@ const ThreadProvider = ({
             type: "SET_THREAD",
             payload: {
               id: id,
-              thread: {
-                ...newThread,
-                messages: newThread.messages.map(
-                  (message: Message["data"]) => ({
-                    id: Math.random(),
-                    data: message,
-                  }),
-                ),
-              },
+              thread: newThread,
             },
           });
           setSelectedThread(newThread.id);
@@ -359,7 +351,7 @@ const ThreadProvider = ({
         const reply = await response.json();
         dispatch({
           type: "ADD_MESSAGE",
-          payload: { id, message: { id: Math.random(), data: reply } },
+          payload: { id, message: reply },
         });
       } catch (error) {
         dispatch({
