@@ -30,4 +30,4 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ secrets.REGISTRY_NAME }}.azurecr.io/infini-connect-ui:latest
+          tags: ${{ secrets.NEW_REGISTRY_NAME }}.azurecr.io/infini-connect-ui:latest
