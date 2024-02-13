@@ -38,11 +38,20 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+  ports:
+    http:
+      port: 80
+      targetPort: http
+      protocol: TCP
+    https:
+      port: 443
+      targetPort: https
+      protocol: TCP
 
 ingress:
   enabled: true
   className: ""
+  port: 443
   annotations: 
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
   hosts:

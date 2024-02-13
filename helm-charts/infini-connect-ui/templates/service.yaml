@@ -8,9 +8,13 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
-      protocol: TCP
+    - port: {{ .Values.service.ports.http.port }}
+      targetPort: {{ .Values.service.ports.http.targetPort }}
+      protocol: {{ .Values.service.ports.http.protocol }}
       name: http
+    - port: {{ .Values.service.ports.https.port }}
+      targetPort: {{ .Values.service.ports.https.targetPort }}
+      protocol: {{ .Values.service.ports.https.protocol }}
+      name: https
   selector:
     {{- include "infini-connect-ui.selectorLabels" . | nindent 4 }}

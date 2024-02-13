@@ -35,8 +35,6 @@
 name: Build and deploy an app to AKS with Helm
 
 on:
-  push:
-    branches: ci-cd
   workflow_dispatch:
 
 env:
@@ -90,10 +88,10 @@ jobs:
         id: bake
 
       # Deploys application based on manifest files from previous step
-      #- name: Deploy application
-      #  uses: Azure/k8s-deploy@v4
-      #  with:
-      #    action: deploy
-      #    manifests: ${{ steps.bake.outputs.manifestsBundle }}
-      #    images: |
-      #      ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+      - name: Deploy application
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: ${{ steps.bake.outputs.manifestsBundle }}
+          images: |
+            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}
