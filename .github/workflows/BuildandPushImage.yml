@@ -3,10 +3,10 @@
 
 name: Build and Push 
 on:
-  push:
-    branches:
-      - main
-      - ci-cd
+  # push:
+  #   branches:
+  #     - main
+  #     - ci-cd
   workflow_dispatch:
 jobs:
   build-and-push:
