@@ -6,6 +6,8 @@ replicaCount: 1
 
 namespace: ic-core-acc
 
+environment: prod
+
 image:
   repository: inficonnectacr.azurecr.io/infini-connect-ui
   pullPolicy: IfNotPresent

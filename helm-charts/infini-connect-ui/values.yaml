@@ -6,6 +6,8 @@ replicaCount: 1
 
 namespace: defualt
 
+environment: dev
+
 image:
   repository: inficonnectacr.azurecr.io/infini-connect-ui
   pullPolicy: IfNotPresent
