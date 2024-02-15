@@ -62,7 +62,7 @@ ingress:
   annotations: 
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
   hosts:
-    - host: chart-example.local
+    - host: dev.infini-connect.devoteam.nl
       paths:
         - path: /
           pathType: ImplementationSpecific
