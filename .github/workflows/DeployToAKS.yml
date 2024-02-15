@@ -38,7 +38,7 @@ on:
   push:
     branches:
       - main
-      - ci-cd
+      - update-env-vars
   workflow_dispatch:
 
 env:
