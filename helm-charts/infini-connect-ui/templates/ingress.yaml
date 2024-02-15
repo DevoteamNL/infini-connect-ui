@@ -16,7 +16,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: {{ $fullName }}
-  namespace : ic-core-dev 
+  namespace: {{ .Values.namespace }} 
   labels:
     {{- include "infini-connect-ui.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}

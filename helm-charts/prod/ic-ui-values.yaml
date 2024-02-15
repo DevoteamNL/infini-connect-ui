@@ -4,13 +4,13 @@
 
 replicaCount: 1
 
-namespace: defualt
+namespace: ic-core-acc
 
 image:
   repository: inficonnectacr.azurecr.io/infini-connect-ui
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "dev"
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""

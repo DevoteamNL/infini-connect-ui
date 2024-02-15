@@ -4,7 +4,7 @@
 
 replicaCount: 1
 
-namespace: defualt
+namespace: ic-core-dev
 
 image:
   repository: inficonnectacr.azurecr.io/infini-connect-ui
