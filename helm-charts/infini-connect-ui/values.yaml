@@ -8,7 +8,7 @@ image:
   repository: inficonnectacracr.azurecr.io/infini-connect-ui
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "dev"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -47,6 +47,11 @@ service:
       port: 443
       targetPort: https
       protocol: TCP
+
+configMapValues:
+  VITE_API_BASE_URL: "https://dvt-infini-connect-old-dev.azurewebsites.net"
+  VITE_GOOGLE_CLIENT_ID: "779787791084-sf0tjf22s5cl3odf9sjg6rch0if9c0qq.apps.googleusercontent.com"
+
 
 ingress:
   enabled: true

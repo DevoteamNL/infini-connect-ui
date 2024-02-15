@@ -1,5 +1,9 @@
 FROM node:20-alpine AS build
 
+# Set environment variables
+ENV VITE_API_BASE_URL=
+ENV VITE_GOOGLE_CLIENT_ID=
+
 WORKDIR /app
 
 COPY package.json yarn.lock ./
