@@ -31,7 +31,6 @@ Common labels
 */}}
 {{- define "infini-connect-ui.labels" -}}
 helm.sh/chart: {{ include "infini-connect-ui.chart" . }}
-environment: {{ .Values.environment }}
 {{ include "infini-connect-ui.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
