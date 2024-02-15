@@ -38,7 +38,7 @@ on:
   push:
     branches:
       - main
-      - update-env-vars
+      #- update-env-vars
   workflow_dispatch:
 
 env:
@@ -89,7 +89,7 @@ jobs:
           helmChart: ${{ env.CHART_PATH }}
           overrideFiles: "./helm-charts/dev/values.yaml"
           overrides: |
-            replicas:2
+            replicas:1
           helm-version: "latest"
         id: bake
 
@@ -105,6 +105,7 @@ jobs:
 
   deployToProd:
     name: Deploy to Production
+    needs: deployToDev
     permissions:
       actions: read
       contents: read
@@ -144,7 +145,7 @@ jobs:
           helmChart: ${{ env.CHART_PATH }}
           overrideFiles: ./helm-charts/prod/values.yaml
           overrides: |
-            replicas:2
+            replicas:1
           helm-version: "latest"
         id: bake
 
