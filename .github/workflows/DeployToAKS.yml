@@ -87,7 +87,7 @@ jobs:
         with:
           renderEngine: "helm"
           helmChart: ${{ env.CHART_PATH }}
-          overrideFiles: "../helm-charts/dev/ic-ui-vaulues.yaml"
+          overrideFiles: "./helm-charts/dev/values.yaml"
           overrides: |
             replicas:2
           helm-version: "latest"
@@ -142,7 +142,7 @@ jobs:
         with:
           renderEngine: "helm"
           helmChart: ${{ env.CHART_PATH }}
-          overrideFiles: ../helm-charts/prod/ic-ui-vaulues.yaml
+          overrideFiles: ./helm-charts/prod/values.yaml
           overrides: |
             replicas:2
           helm-version: "latest"
