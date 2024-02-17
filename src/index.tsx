@@ -25,7 +25,7 @@ root.render(
   <StrictMode>
     <StyledEngineProvider injectFirst>
       <GoogleOAuthProvider
-        clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}
+        clientId={config.VITE_GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || ""}
       >
         <SettingsProvider>
           <Theme>

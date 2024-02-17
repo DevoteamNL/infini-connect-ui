@@ -9,10 +9,10 @@ namespace: ic-core-dev
 environment: dev
 
 image:
-  repository: inficonnectacr.azurecr.io/infini-connect-ui
+  repository: infini-connect-ui
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "dev"
+  tag: "test"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -41,7 +41,7 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: ClusterIP
+  type: NodePort
   ports:
     http:
       port: 80

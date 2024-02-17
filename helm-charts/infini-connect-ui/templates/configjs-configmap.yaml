@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configjs-configmap
+  namespace: {{ .Values.namespace }} 
+data:
+  config.js: |
+    var config = (() => {
+       return {
+            {{- range $key, $value := .Values.configMapValues }}
+              {{ $key }}: {{ $value | quote }}
+            {{- end }}
+        };
+       })();

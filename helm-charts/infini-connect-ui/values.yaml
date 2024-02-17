@@ -9,8 +9,8 @@ namespace: defualt
 environment: dev
 
 image:
-  repository: inficonnectacr.azurecr.io/infini-connect-ui
-  pullPolicy: IfNotPresent
+  repository: infini-connect-ui
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "dev"
 
