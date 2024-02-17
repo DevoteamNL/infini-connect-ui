@@ -6,7 +6,7 @@ on:
   push:
     branches:
       - main
-      - update-env-vars
+      #- update-env-vars
 
   workflow_dispatch:
 jobs:
