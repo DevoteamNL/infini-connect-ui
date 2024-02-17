@@ -9,7 +9,7 @@ namespace: ic-core-dev
 environment: dev
 
 image:
-  repository: infini-connect-ui
+  repository: inficonnectacr.azurecr.io/infini-connect-ui
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "dev"
