@@ -10,7 +10,7 @@ environment: prod
 
 image:
   repository: inficonnectacr.azurecr.io/infini-connect-ui
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
@@ -53,21 +53,21 @@ service:
       protocol: TCP
 
 configMapValues:
-  VITE_API_BASE_URL: "https://infini-connect.devoteam.nl/"
-  VITE_GOOGLE_CLIENT_ID: "779787791084-sf0tjf22s5cl3odf9sjg6rch0if9c0qq.apps.googleusercontent.com"
+  "VITE_API_BASE_URL": "https://infini-connect.devoteam.nl"
+  "VITE_GOOGLE_CLIENT_ID": "779787791084-sf0tjf22s5cl3odf9sjg6rch0if9c0qq.apps.googleusercontent.com"
 
 
 ingress:
   enabled: true
   className: ""
-  port: 443
+  port: 80
   annotations: 
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
   hosts:
     - host: "https://infini-connect.devoteam.nl"
       paths:
         - path: /
-          pathType: ImplementationSpecific
+          pathType: Prefix
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

@@ -8,7 +8,7 @@ data:
     var config = (() => {
        return {
             {{- range $key, $value := .Values.configMapValues }}
-              {{ $key }}: {{ $value | quote }}
+              {{ $key | quote}}: {{ $value | quote }},
             {{- end }}
         };
        })();
