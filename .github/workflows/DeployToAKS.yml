@@ -35,10 +35,6 @@
 name: Build and deploy to AKS with Helm
 
 on:
-  push:
-    branches:
-      - main
-      - update-env-vars
   workflow_dispatch:
 
 env:
