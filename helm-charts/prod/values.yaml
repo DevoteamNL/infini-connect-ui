@@ -4,7 +4,7 @@
 
 replicaCount: 1
 
-namespace: ic-core-acc
+namespace: ic-core
 
 environment: prod
 
