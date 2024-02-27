@@ -121,7 +121,7 @@ const MainContent: React.FC<MainContentProps> = () => {
     const messageId = messages?.[messages.length - 1].id;
     if (!messageId) return;
 
-    const url = new URL(import.meta.env.VITE_API_BASE_URL || "");
+    const url = new URL(config.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "");
     url.pathname = `api/message/${messageId}/feedback`;
 
     fetch(url, {
