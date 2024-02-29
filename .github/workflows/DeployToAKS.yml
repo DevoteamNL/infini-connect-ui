@@ -35,7 +35,9 @@
 name: Build and deploy to AKS with Helm
 
 on:
-  workflow_dispatch:
+  workflow_run:
+    workflows: ['Build and Push to ACR']
+    types: [completed]
 
 env:
   RESOURCE_GROUP: "inficonnectrg"
