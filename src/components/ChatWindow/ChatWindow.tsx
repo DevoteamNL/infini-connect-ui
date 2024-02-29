@@ -12,25 +12,25 @@ import {
   Stack,
   TextField,
   Typography,
-  styled,
+  styled, AccordionSummary, Accordion, AccordionDetails
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
 import { Thread, useThreadContext } from "../../context/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
-
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // Define the MainContentProps interface for the component's props
 interface MainContentProps {
   thread?: Thread;
 }
 
-const Welcome = styled("p")(({ theme }) => ({
-  ...theme.typography.body1,
-  border: `1px solid ${theme.palette.secondary.main}`,
-  borderRadius: theme.shape.borderRadius,
-  padding: theme.spacing(3),
-  margin: theme.spacing(1),
+// Styled StyledAccordionDetails with left-aligned Typography
+const StyledAccordionDetails = styled(AccordionDetails)(({ theme }) => ({
+  '& .MuiTypography-root': { // Targeting all Typography components within StyledAccordionDetails
+    textAlign: 'left',
+  },
+  // You can add more styles for StyledAccordionDetails here
 }));
 
 const Message = ({
@@ -116,7 +116,7 @@ const MainContent: React.FC<MainContentProps> = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, addingFeedback]);
 
-  const sendFeedback = () => {
+  const sendFeedback = (feedbackRating: FeedbackRating) => {
     if (checkExpired()) return;
     const messageId = messages?.[messages.length - 1].id;
     if (!messageId) return;
@@ -132,7 +132,7 @@ const MainContent: React.FC<MainContentProps> = () => {
       },
       body: JSON.stringify({
         text: message,
-        rating: addingFeedback,
+        rating: feedbackRating,
       }),
     }).then((response) => {
       if (!response.ok) {
@@ -146,7 +146,7 @@ const MainContent: React.FC<MainContentProps> = () => {
     if (!message || !selectedThread || selectedThread.loading) return;
 
     if (addingFeedback) {
-      sendFeedback();
+      sendFeedback(addingFeedback);
       setAddingFeedback(undefined);
     } else {
       postMessage(
@@ -196,15 +196,108 @@ const MainContent: React.FC<MainContentProps> = () => {
             </Grid>
             <Grid item xs={12}>
               <Typography variant="body1">
-                I can help you with the following:
+                I can help you with the following (Only for the Amsterdam
+                office):
               </Typography>
             </Grid>
 
-            <Grid item xs={6}>
-              <Welcome>Find available desks</Welcome>
-            </Grid>
-            <Grid item xs={6}>
-              <Welcome>Search through CVs</Welcome>
+            <Grid container>
+              <Grid item xs={1}></Grid>
+              <Grid item xs={10}>
+                <div>
+                  <Accordion defaultExpanded>
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      aria-controls="panel1a-content"
+                      id="panel1a-header"
+                    >
+                      <Typography>Find available desks</Typography>
+                    </AccordionSummary>
+                    <StyledAccordionDetails>
+                      <Typography>
+                        <b>Sample Question:</b> "Can you please find available
+                        dual monitor desks for next week Tuesday?"
+                      </Typography>
+                      <Typography>
+                        <b>Sample Question:</b> "find desk for tomorrow?"
+                      </Typography>
+                    </StyledAccordionDetails>
+                  </Accordion>
+
+                  <Accordion>
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      aria-controls="panel2a-content"
+                      id="panel2a-header"
+                    >
+                      <Typography>Make a desk reservation</Typography>
+                    </AccordionSummary>
+                    <StyledAccordionDetails>
+                      <Typography>
+                        <b>Sample Question:</b> "Reserve dual desk monitor for
+                        tomorrow."
+                      </Typography>
+                    </StyledAccordionDetails>
+                  </Accordion>
+
+                  <Accordion>
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      aria-controls="panel3a-content"
+                      id="panel3a-header"
+                    >
+                      <Typography>Get desk reservation details</Typography>
+                    </AccordionSummary>
+                    <StyledAccordionDetails>
+                      <Typography>
+                        <b>Sample Question:</b> "Do I have desk reserved for
+                        tomorrow?"
+                      </Typography>
+                      <Typography>
+                        <b>Sample Question:</b> "Who is coming to office
+                        tomorrow?"
+                      </Typography>
+                      <Typography>
+                        <b>Sample Question:</b> "Is Ratko coming to office
+                        tomorrow?"
+                      </Typography>
+                    </StyledAccordionDetails>
+                  </Accordion>
+
+                  <Accordion>
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      aria-controls="panel4a-content"
+                      id="panel4a-header"
+                    >
+                      <Typography>Check available parking spots</Typography>
+                    </AccordionSummary>
+                    <StyledAccordionDetails>
+                      <Typography>
+                        <b>Sample Question:</b> "Any parking available for 5th
+                        of march?"
+                      </Typography>
+                    </StyledAccordionDetails>
+                  </Accordion>
+
+                  <Accordion>
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      aria-controls="panel5a-content"
+                      id="panel5a-header"
+                    >
+                      <Typography>Make a parking reservation</Typography>
+                    </AccordionSummary>
+                    <StyledAccordionDetails>
+                      <Typography>
+                        <b>Sample Question:</b> "I need to reserve a parking
+                        spot for next Monday."
+                      </Typography>
+                    </StyledAccordionDetails>
+                  </Accordion>
+                </div>
+              </Grid>
+              <Grid item xs={1}></Grid>
             </Grid>
           </Grid>
         </Box>
@@ -254,18 +347,27 @@ const MainContent: React.FC<MainContentProps> = () => {
                 justifyContent={"flex-end"}
               >
                 <Button
-                  onClick={() => setAddingFeedback(FeedbackRating.NEUTRAL)}
+                  onClick={() => {
+                    setAddingFeedback(FeedbackRating.NEUTRAL);
+                    sendFeedback(FeedbackRating.NEUTRAL);
+                  }}
                 >
                   How was this response?
                 </Button>
 
                 <IconButton
-                  onClick={() => setAddingFeedback(FeedbackRating.BAD)}
+                  onClick={() => {
+                    setAddingFeedback(FeedbackRating.BAD);
+                    sendFeedback(FeedbackRating.BAD);
+                  }}
                 >
                   <ThumbDown />
                 </IconButton>
                 <IconButton
-                  onClick={() => setAddingFeedback(FeedbackRating.GOOD)}
+                  onClick={() => {
+                    setAddingFeedback(FeedbackRating.GOOD);
+                    sendFeedback(FeedbackRating.GOOD);
+                  }}
                 >
                   <ThumbUp />
                 </IconButton>
