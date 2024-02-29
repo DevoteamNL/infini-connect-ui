@@ -59,7 +59,7 @@ configMapValues:
 
 ingress:
   enabled: true
-  className: ""
+  className: "nginx"
   port: 80
   annotations: 
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
