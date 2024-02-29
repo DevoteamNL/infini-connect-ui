@@ -12,7 +12,7 @@ image:
   repository: inficonnectacr.azurecr.io/infini-connect-ui
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "dev"
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
