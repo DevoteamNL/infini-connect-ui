@@ -87,7 +87,7 @@ jobs:
           helmChart: ${{ env.CHART_PATH }}
           overrideFiles: "./helm-charts/dev/values.yaml"
           overrides: |
-            replicas:1
+            image.tag:${{ github.sha }}
           helm-version: "latest"
         id: bake
 
@@ -143,7 +143,7 @@ jobs:
           helmChart: ${{ env.CHART_PATH }}
           overrideFiles: ./helm-charts/prod/values.yaml
           overrides: |
-            replicas:1
+             image.tag:${{ github.sha }}
           helm-version: "latest"
         id: bake
 
