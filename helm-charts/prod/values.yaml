@@ -64,7 +64,7 @@ ingress:
   annotations: 
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
   hosts:
-    - host: "https://infini-connect.devoteam.nl"
+    - host: "infini-connect.devoteam.nl"
       paths:
         - path: /
           pathType: Prefix
