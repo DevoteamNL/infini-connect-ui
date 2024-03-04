@@ -56,7 +56,7 @@ jobs:
     environment: Development
     steps:
       # Checks out the repository this file is in
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Logs in with your Azure credentials
       - name: Azure login
@@ -99,7 +99,7 @@ jobs:
           manifests: ${{ steps.bake.outputs.manifestsBundle }}
           namespace: "ic-core-dev" 
           images: |
-            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/infini-connect-ui:${{ github.sha }}
+              inficonnectacr.azurecr.io/infini-connect-ui:${{ github.sha }}
 
   deployToProd:
     name: Deploy to Production
@@ -112,7 +112,7 @@ jobs:
     environment: Production
     steps:
       # Checks out the repository this file is in
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Logs in with your Azure credentials
       - name: Azure login
@@ -155,4 +155,4 @@ jobs:
           manifests: ${{ steps.bake.outputs.manifestsBundle }}
           namespace: "ic-core" 
           images: |
-            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/infini-connect-ui:${{ github.sha }}
+            inficonnectacr.azurecr.io/infini-connect-ui:${{ github.sha }}
