@@ -10,7 +10,6 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import Select from "@mui/material/Select";
 import * as React from "react";
 import { useAuthContext } from "../../context/AuthContext";
-import { config } from "../../config";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -43,7 +42,7 @@ export default function PluginSelector({
     if (expired) {
       return;
     }
-    const url = new URL(config.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "");
+    const url = new URL(window.config.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "");
     url.pathname = "api/plugin/";
 
     fetch(url, {

@@ -20,7 +20,6 @@ import { useSettings } from "../../context/SettingsContext";
 import { Thread, useThreadContext } from "../../context/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { config } from "../../config";
 // Define the MainContentProps interface for the component's props
 interface MainContentProps {
   thread?: Thread;
@@ -122,7 +121,7 @@ const MainContent: React.FC<MainContentProps> = () => {
     const messageId = messages?.[messages.length - 1].id;
     if (!messageId) return;
 
-    const url = new URL(config.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "");
+    const url = new URL(window.config.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "");
     url.pathname = `api/message/${messageId}/feedback`;
 
     fetch(url, {

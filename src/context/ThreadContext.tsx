@@ -7,7 +7,6 @@ import {
   useState,
 } from "react";
 import { useAuthContext } from "./AuthContext";
-import { config } from "../config";
 
 // Define the thread context
 interface ThreadContextProps {
@@ -173,7 +172,7 @@ const ThreadProvider = ({
       if (expired) {
         return;
       }
-      const url = new URL(config.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "");
+      const url = new URL(window.config.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "");
       url.pathname = "api/thread/";
       if (params.threadId) {
         url.pathname +=

@@ -11,7 +11,7 @@ import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { devoteamDesignTokens } from "./themes/devoteamTheme";
-import { config } from "./config";
+
 
 const Theme = ({ children }: { children: ReactNode[] | ReactNode }) => {
   const { darkMode } = useSettings();
@@ -26,7 +26,7 @@ root.render(
   <StrictMode>
     <StyledEngineProvider injectFirst>
       <GoogleOAuthProvider
-        clientId={config.VITE_GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || ""}
+        clientId={window.config.VITE_GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || ""}
       >
         <SettingsProvider>
           <Theme>
