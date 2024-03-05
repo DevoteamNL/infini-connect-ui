@@ -5,10 +5,8 @@ metadata:
   namespace: {{ .Values.namespace }} 
 data:
   config.js: |
-    var config = (() => {
-       return {
-            {{- range $key, $value := .Values.configMapValues }}
-              {{ $key | quote}}: {{ $value | quote }},
-            {{- end }}
-        };
-       })();
+    window.config = {
+      {{- range $key, $value := .Values.configMapValues }}
+        {{ $key | quote}}: {{ $value | quote }},
+      {{- end }}
+    };
