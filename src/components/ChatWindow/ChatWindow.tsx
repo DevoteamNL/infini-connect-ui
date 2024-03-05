@@ -20,6 +20,7 @@ import { useSettings } from "../../context/SettingsContext";
 import { Thread, useThreadContext } from "../../context/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { config } from "../../config";
 // Define the MainContentProps interface for the component's props
 interface MainContentProps {
   thread?: Thread;
