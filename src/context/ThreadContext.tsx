@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { useAuthContext } from "./AuthContext";
+import { config } from "../config";
 
 // Define the thread context
 interface ThreadContextProps {

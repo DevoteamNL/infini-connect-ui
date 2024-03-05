@@ -11,6 +11,7 @@ import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { devoteamDesignTokens } from "./themes/devoteamTheme";
+import { config } from "./config";
 
 const Theme = ({ children }: { children: ReactNode[] | ReactNode }) => {
   const { darkMode } = useSettings();
