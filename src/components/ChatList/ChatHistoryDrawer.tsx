@@ -167,6 +167,13 @@ const ChatHistoryDrawer = () => {
           <Container>
             <Error>
               {error}
+              <br />
+              <br />
+              Contact:{" "}
+              <a href="mailto:nl.infini.connect@devoteam.com">
+                nl.infini.connect
+              </a>
+              <br />
               <Button onClick={() => listThreads()}>Retry</Button>
             </Error>
           </Container>

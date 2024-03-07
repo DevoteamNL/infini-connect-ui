@@ -7,6 +7,10 @@ import Typography from "@mui/material/Typography";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuthContext } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
+import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import EmailIcon from '@mui/icons-material/Email';
 
 const SignIn = () => {
   const { login } = useAuthContext();
@@ -44,13 +48,27 @@ const SignIn = () => {
       <img src="/static/images/devoteam_rgb.png" alt="logo" width="200px" />
 
       <Typography variant="body2" color="text.secondary" align="center">
-        For internal Devoteam use only!{" "}
-        <Link
-          color="inherit"
-          href="https://github.com/DevoteamNL/infini-connect-ui"
-        >
-          InfiniConnect
-        </Link>
+        For internal Devoteam use only!
+
+        <Grid container direction="column" alignItems="center" style={{ marginTop: '8px' }}>
+          <Grid item>
+            <Link color="inherit" href="https://github.com/DevoteamNL/infini-connect-ui" underline="none">
+              <IconButton>
+                <GitHubIcon />
+              </IconButton>
+              InfiniConnect
+            </Link>
+          </Grid>
+
+          <Grid item>
+            <Link color="inherit" href="mailto:nl.infini.connect@devoteam.com" underline="none">
+              <IconButton>
+                <EmailIcon />
+              </IconButton>
+              nl.infini.connect@devoteam.com
+            </Link>
+          </Grid>
+        </Grid>
       </Typography>
     </Stack>
   );
