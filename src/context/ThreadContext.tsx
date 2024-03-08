@@ -148,6 +148,22 @@ const constructNewThread = (): Thread => {
   };
 };
 
+class FetchError extends Error {
+  url: URL;
+  status: number;
+  statusText: string;
+  errorMessage: string;
+
+  constructor(url: URL, status: number, statusText: string, errorMessage?: string) {
+    super(errorMessage);
+    this.name = "FetchError";
+    this.url = url;
+    this.status = status;
+    this.statusText = statusText;
+    this.errorMessage = errorMessage || `Failed to fetch ${url} - ${status}: ${statusText}`;
+  }
+}
+
 // Create the thread provider
 const ThreadProvider = ({
   children,
@@ -187,7 +203,20 @@ const ThreadProvider = ({
         },
       });
       if (!response.ok) {
-        throw new Error("Failed to fetch");
+        const errorBody = await response
+          .json()
+          .catch(
+            () =>
+              "Internal server error. Failed to retrieve detailed error message",
+          );
+        const errorMessage =
+          errorBody.error || `Failed to retrieve detailed error message`;
+        throw new FetchError(
+          url,
+          response.status,
+          response.statusText,
+          `${errorMessage} (Status: ${errorBody.status || response.status})`,
+        );
       }
       return response;
     },
@@ -346,6 +375,10 @@ const ThreadProvider = ({
           },
         });
         if (!response) {
+          dispatch({
+            type: "SET_ERROR",
+            payload: { id, error: "Failed to fetch" },
+          });
           return;
         }
         const reply = await response.json();
@@ -353,10 +386,10 @@ const ThreadProvider = ({
           type: "ADD_MESSAGE",
           payload: { id, message: reply },
         });
-      } catch (error) {
+      } catch (error: FetchError | any) {
         dispatch({
           type: "SET_ERROR",
-          payload: { id, error: "Failed to post message" },
+          payload: { id, error: error.errorMessage },
         });
       }
     },
