@@ -12,7 +12,7 @@ import {
   Stack,
   TextField,
   Typography,
-  styled, AccordionSummary, Accordion, AccordionDetails
+  styled, AccordionSummary, Accordion, AccordionDetails, Container
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
@@ -24,6 +24,19 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 interface MainContentProps {
   thread?: Thread;
 }
+
+const Error = styled("div")(({ theme }) => ({
+  color: theme.palette.error.main,
+  backgroundColor: theme.palette.background.default,
+  border: `1px solid ${theme.palette.error.light}`,
+  borderRadius: theme.shape.borderRadius,
+  padding: theme.spacing(1),
+  margin: theme.spacing(1),
+  textAlign: "center",
+  display: "flex",
+  justifyContent: "center",
+  flexDirection: "column",
+}));
 
 // Styled StyledAccordionDetails with left-aligned Typography
 const StyledAccordionDetails = styled(AccordionDetails)(({ theme }) => ({
@@ -136,6 +149,7 @@ const MainContent: React.FC<MainContentProps> = () => {
       }),
     }).then((response) => {
       if (!response.ok) {
+        // @ts-ignore
         throw new Error("Failed to fetch");
       }
     });
@@ -378,34 +392,51 @@ const MainContent: React.FC<MainContentProps> = () => {
         </Box>
       )}
       <Box sx={{ mt: 1 }}>
-        <TextField
-          fullWidth
-          multiline
-          rows={rows}
-          maxRows={Infinity}
-          label="Type a message"
-          variant="outlined"
-          value={message}
-          onKeyDown={(ev) => {
-            if (ev.key === "Enter") {
-              if (!ev.shiftKey) {
-                handleSendMessage();
-                ev.preventDefault();
+        {selectedThread?.error ? (
+          <Container>
+            <Error>
+              {selectedThread?.error}
+              <br />
+              <br />
+              Contact:{" "}
+              <a href="mailto:nl.infini.connect@devoteam.com">
+                nl.infini.connect
+              </a>
+              <br />
+
+            </Error>
+          </Container>
+        ) : (
+          <TextField
+            fullWidth
+            multiline
+            rows={rows}
+            maxRows={Infinity}
+            label="Type a message"
+            variant="outlined"
+            value={message}
+            onKeyDown={(ev) => {
+              if (ev.key === "Enter") {
+                if (!ev.shiftKey) {
+                  handleSendMessage();
+                  ev.preventDefault();
+                }
               }
-            }
-          }}
-          onChange={(e) => setMessage(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <IconButton
-                onClick={handleSendMessage}
-                disabled={selectedThread?.loading}
-              >
-                <SendIcon />
-              </IconButton>
-            ),
-          }}
-        />
+            }}
+            onChange={(e) => setMessage(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={handleSendMessage}
+                  disabled={selectedThread?.loading}
+                >
+                  <SendIcon />
+                </IconButton>
+              ),
+            }}
+          />
+        )}
+
       </Box>
     </Box>
   );
