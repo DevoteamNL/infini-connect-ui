@@ -184,10 +184,10 @@ const MainContent: React.FC<MainContentProps> = () => {
         display: "flex",
         flexDirection: "column",
         height: "100vh",
+        width: "100%",
+        paddingTop: "80px"
       }}
     >
-      <br />
-      <br />
       <PluginSelector
         plugin={selectedThread?.plugin || plugin}
         onPluginChange={setPlugin}
