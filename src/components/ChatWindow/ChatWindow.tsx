@@ -17,7 +17,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
-import { Thread, useThreadContext } from "../../context/ThreadContext";
+import { Role, Thread, useThreadContext } from "../../context/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // Define the MainContentProps interface for the component's props
@@ -127,7 +127,7 @@ const MainContent: React.FC<MainContentProps> = () => {
   // Effect for auto-scrolling to the latest message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, addingFeedback]);
+  }, [messages, addingFeedback, threads]);
 
   const sendFeedback = (feedbackRating: FeedbackRating) => {
     if (checkExpired()) return;
@@ -192,7 +192,7 @@ const MainContent: React.FC<MainContentProps> = () => {
         plugin={selectedThread?.plugin || plugin}
         onPluginChange={setPlugin}
         disabled={selectedThread?.messages.some(
-          (message) => message.data.role === "user",
+          (message) => message.data.role === Role.USER,
         )}
       ></PluginSelector>
       {messages?.length === 0 ? (
@@ -318,14 +318,17 @@ const MainContent: React.FC<MainContentProps> = () => {
       ) : (
         <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
           <List>
-            {messages?.map((msg) => (
-              <Message
-                key={msg.id}
-                sender={msg.data.role === "user"}
-                message={msg.data.content}
-                caption={new Date().toLocaleTimeString() /** Mock sent date */}
-              ></Message>
-            ))}
+            {messages?.filter(msg => msg.data.content.length !== 0)
+              .map((msg) => (
+                <Message
+                  key={msg.id}
+                  sender={msg.data.role === Role.USER}
+                  message={msg.data.content}
+                  caption={msg.createdAt
+                    ? new Date(msg.createdAt).toLocaleTimeString()
+                    : "" /* Mock sent date */}
+                ></Message>
+              ))}
 
             {selectedThread?.replying ? (
               <Message sender={false} caption="thinking..."></Message>
@@ -334,13 +337,12 @@ const MainContent: React.FC<MainContentProps> = () => {
                 <Message
                   sender={false}
                   caption=""
-                  message={`Can you share a bit more info on what you ${
-                    {
-                      [FeedbackRating.NEUTRAL]: "think of",
-                      [FeedbackRating.BAD]: "dislike about",
-                      [FeedbackRating.GOOD]: "like about",
-                    }[addingFeedback]
-                  } the previous response or your general experience with the app?`}
+                  message={`Can you share a bit more info on what you ${{
+                    [FeedbackRating.NEUTRAL]: "think of",
+                    [FeedbackRating.BAD]: "dislike about",
+                    [FeedbackRating.GOOD]: "like about",
+                  }[addingFeedback]
+                    } the previous response or your general experience with the app?`}
                 ></Message>
                 <Stack
                   direction="row"
