@@ -70,12 +70,12 @@ interface UserRequestPayload {
 interface AiResponsePayload {
   id: number;
   [StreamMetadataTagName.THREAD_ID]: number;
-  [StreamMetadataTagName.USER_MESSAGE_CREATED_AT] ?: string;
-  [StreamMetadataTagName.USER_MESSAGE_ID] ?: number;
-  [StreamMetadataTagName.ROLE] ?: Role;
+  [StreamMetadataTagName.USER_MESSAGE_CREATED_AT]?: string;
+  [StreamMetadataTagName.USER_MESSAGE_ID]?: number;
+  [StreamMetadataTagName.ROLE]?: Role;
   messageContent: string;
-  [StreamMetadataTagName.AI_MESSAGE_ID] ?: number;
-  [StreamMetadataTagName.AI_MESSAGE_CREATED_AT] ?: string;
+  [StreamMetadataTagName.AI_MESSAGE_ID]?: number;
+  [StreamMetadataTagName.AI_MESSAGE_CREATED_AT]?: string;
 }
 
 // Define the action types
@@ -120,19 +120,89 @@ interface StreamExtractedData {
   [StreamMetadataTagName.AI_MESSAGE_CREATED_AT]?: string;
 }
 
-interface StreamReducerPayload extends StreamExtractedData {
-  isLoading?: boolean;
-  messageContent: string;
-}
-
 const NO_NUMBER_YET = 0;
 const NO_TEXT_YET = "";
+// returns only time if the creation date was today, otherwise it includes the date
+const getFormattedDate = (createdAt = NO_TEXT_YET) => {
+  if (createdAt !== NO_TEXT_YET) {
+    const ONE_DAY_IN_MILLISECONDS = 86400000;
+    const auxCreationDate = new Date(createdAt);
+    const creationDate = auxCreationDate.getTime();
+    const now = new Date();
+    let wasNotCreatedToday = false;
+    if ((now.getTime() - creationDate) > ONE_DAY_IN_MILLISECONDS
+      || auxCreationDate.getDay() !== now.getDay()) {
+      wasNotCreatedToday = true;
+    }
+    return (wasNotCreatedToday)
+      ? `${auxCreationDate.toLocaleDateString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      })}, ${auxCreationDate.toLocaleTimeString()}`
+      : auxCreationDate.toLocaleTimeString();
+  }
+  return NO_TEXT_YET;
+};
+
+const parseStreamedData = (
+  messageChunk: string,
+  streamThreadIdWasParsed: boolean
+): StreamExtractedData => {
+  const extractedData: StreamExtractedData = {};
+  let aux = messageChunk;
+
+  const extract = (
+    regex: RegExp,
+    groupName: StreamMetadataTagName,
+    isValueNumber: boolean
+  ) => {
+    const found = aux.match(regex);
+    if (found?.groups && found.groups[groupName]) {
+      // @ts-ignore
+      extractedData[groupName] = isValueNumber
+        ? Number(found.groups[groupName])
+        : found.groups[groupName];
+      aux = aux.replace(found.groups[`${groupName}Block`], "");
+    }
+  };
+
+  // the order of the extraction of the metadata from the string chunks matters
+  if (!streamThreadIdWasParsed) {
+    extract(metadataRegExs.threadIdRegex, StreamMetadataTagName.THREAD_ID, true);
+  }
+  [
+    { tag: StreamMetadataTagName.USER_MESSAGE_ID, isValueNumber: true },
+    { tag: StreamMetadataTagName.USER_MESSAGE_CREATED_AT, isValueNumber: false },
+    { tag: StreamMetadataTagName.ROLE, isValueNumber: false },
+    { tag: StreamMetadataTagName.AI_MESSAGE_ID, isValueNumber: true },
+  ].forEach(it => {
+    if (aux.length > 0) {
+      extract(metadataRegExs[`${it.tag}Regex`], it.tag, it.isValueNumber);
+    }
+  });
+  extract(metadataRegExs.aiMessageCreationDateRegex, StreamMetadataTagName.AI_MESSAGE_CREATED_AT, false);
+  // data extraction must be last, after the metadata extraction
+  if (aux.length > 0) {
+    extractedData.messageContent = aux;
+  }
+  return extractedData;
+};
 
 // Define the reducer function
 const threadReducer = (state: Thread[], action: Action): Thread[] => {
   switch (action.type) {
     case "SET_THREADS":
-      return [...state.filter((thread) => thread.newThread), ...action.payload];
+      return [
+        ...state.filter((thread) => thread.newThread),
+        ...action.payload.map(thread => ({
+          ...thread,
+          messages: thread.messages.map(msg => ({
+            ...msg,
+            createdAt: getFormattedDate(msg.createdAt)
+          }))
+        })
+        )];
     case "SET_ERROR":
       return state.map((thread) =>
         thread.id === action.payload.id
@@ -185,7 +255,7 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
                 messages[i].id = Number(action.payload[StreamMetadataTagName.USER_MESSAGE_ID]);
               }
               if (action.payload[StreamMetadataTagName.USER_MESSAGE_CREATED_AT]) {
-                messages[i].createdAt = action.payload[StreamMetadataTagName.USER_MESSAGE_CREATED_AT];
+                messages[i].createdAt = getFormattedDate(action.payload[StreamMetadataTagName.USER_MESSAGE_CREATED_AT]);
               }
               break;
             }
@@ -213,6 +283,8 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
           const isMessageAlreadyPresent = thread.messages[thread.messages.length - 1]
             && (thread.messages[thread.messages.length - 1].data.role === Role.ASSISTANT
               || thread.messages[thread.messages.length - 1].id === NO_NUMBER_YET);
+
+          const createdAt = getFormattedDate(action.payload[StreamMetadataTagName.AI_MESSAGE_CREATED_AT]);
           const aiResponseMessage = (isMessageAlreadyPresent)
             ? thread.messages[thread.messages.length - 1]
             : {
@@ -221,7 +293,7 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
                 role: action.payload[StreamMetadataTagName.ROLE] || Role.NOT_ATTRIBUTED,
                 content: action.payload.messageContent || NO_TEXT_YET,
               },
-              createdAt: action.payload[StreamMetadataTagName.AI_MESSAGE_CREATED_AT] || NO_TEXT_YET,
+              createdAt
             };
 
           if (isMessageAlreadyPresent) {
@@ -229,7 +301,7 @@ const threadReducer = (state: Thread[], action: Action): Thread[] => {
               aiResponseMessage.id = action.payload[StreamMetadataTagName.AI_MESSAGE_ID];
             }
             if (action.payload[StreamMetadataTagName.AI_MESSAGE_CREATED_AT]) {
-              aiResponseMessage.createdAt = action.payload[StreamMetadataTagName.AI_MESSAGE_CREATED_AT];
+              aiResponseMessage.createdAt = createdAt;
             }
             if (action.payload[StreamMetadataTagName.ROLE]) {
               aiResponseMessage.data.role = action.payload[StreamMetadataTagName.ROLE];
@@ -465,50 +537,6 @@ const ThreadProvider = ({
     },
     [authFetch],
   );
-
-  const parseStreamedData = (
-    messageChunk: string,
-    streamThreadIdWasParsed: boolean
-  ): StreamExtractedData => {
-    const extractedData: StreamExtractedData = {};
-    let aux = messageChunk;
-
-    const extract = (
-      regex: RegExp,
-      groupName: StreamMetadataTagName,
-      isValueNumber: boolean
-    ) => {
-      const found = aux.match(regex);
-      if (found?.groups && found.groups[groupName]) {
-        // @ts-ignore
-        extractedData[groupName] = isValueNumber
-          ? Number(found.groups[groupName])
-          : found.groups[groupName];
-        aux = aux.replace(found.groups[`${groupName}Block`], "");
-      }
-    };
-
-    // the order of the extraction of the metadata from the string chunks matters
-    if (!streamThreadIdWasParsed) {
-      extract(metadataRegExs.threadIdRegex, StreamMetadataTagName.THREAD_ID, true);
-    }
-    [
-      { tag: StreamMetadataTagName.USER_MESSAGE_ID, isValueNumber: true },
-      { tag: StreamMetadataTagName.USER_MESSAGE_CREATED_AT, isValueNumber: false },
-      { tag: StreamMetadataTagName.ROLE, isValueNumber: false },
-      { tag: StreamMetadataTagName.AI_MESSAGE_ID, isValueNumber: true },
-    ].forEach(it => {
-      if (aux.length > 0) {
-        extract(metadataRegExs[`${it.tag}Regex`], it.tag, it.isValueNumber);
-      }
-    });
-    extract(metadataRegExs.aiMessageCreationDateRegex, StreamMetadataTagName.AI_MESSAGE_CREATED_AT, false);
-    // data extraction must be last, after the metadata extraction
-    if (aux.length > 0) {
-      extractedData.messageContent = aux;
-    }
-    return extractedData;
-  };
 
   // including metadata
   const dispatchExtractedStreamedData = async (

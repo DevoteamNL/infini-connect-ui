@@ -324,9 +324,7 @@ const MainContent: React.FC<MainContentProps> = () => {
                   key={msg.id}
                   sender={msg.data.role === Role.USER}
                   message={msg.data.content}
-                  caption={msg.createdAt
-                    ? new Date(msg.createdAt).toLocaleTimeString()
-                    : "" /* Mock sent date */}
+                  caption={msg.createdAt as string}
                 ></Message>
               ))}
 
