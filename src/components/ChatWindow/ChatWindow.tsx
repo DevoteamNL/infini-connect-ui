@@ -20,6 +20,8 @@ import { useSettings } from "../../context/SettingsContext";
 import { Role, Thread, useThreadContext } from "../../context/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { ChatAudioMessage } from './ChatAudioMessage';
+
 // Define the MainContentProps interface for the component's props
 interface MainContentProps {
   thread?: Thread;
@@ -107,8 +109,10 @@ const MainContent: React.FC<MainContentProps> = () => {
     FeedbackRating | undefined
   >();
   const { postMessage, threads, selectedThreadId } = useThreadContext();
+  const { darkMode } = useSettings();
   // State for the chat message and text field rows
   const [message, setMessage] = useState("");
+  const [isRecordingVoiceMessage, setRecordingVoiceMessage] = useState(false);
   const [rows, setRows] = useState(3);
   const selectedThread = threads.find((t) => t.id === selectedThreadId);
   const messages = selectedThread?.messages;
@@ -157,7 +161,7 @@ const MainContent: React.FC<MainContentProps> = () => {
 
   // Function to handle sending a message
   const handleSendMessage = () => {
-    if (!message || !selectedThread || selectedThread.loading) return;
+    if (!message || !selectedThread || selectedThread.loading || isRecordingVoiceMessage) return;
 
     if (addingFeedback) {
       sendFeedback(addingFeedback);
@@ -407,34 +411,66 @@ const MainContent: React.FC<MainContentProps> = () => {
             </Error>
           </Container>
         ) : (
-          <TextField
-            fullWidth
-            multiline
-            rows={rows}
-            maxRows={Infinity}
-            label="Type a message"
-            variant="outlined"
-            value={message}
-            onKeyDown={(ev) => {
-              if (ev.key === "Enter") {
-                if (!ev.shiftKey) {
-                  handleSendMessage();
-                  ev.preventDefault();
+          <Stack
+            direction="row"
+          >
+            <Box
+              sx={{
+                border: `1px solid ${darkMode
+                  ? "rgba(255, 255, 255, 0.23)"
+                  : "rgba(0, 0, 0, 0.23)"
+                  }`,
+                borderRadius: 1,
+                borderRight: 0,
+                borderBottomRightRadius: 0,
+                borderTopRightRadius: 0,
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                width: "3rem"
+              }}
+            >
+              <ChatAudioMessage
+                isRecordingVoiceMessage={isRecordingVoiceMessage}
+                setRecordingVoiceMessage={setRecordingVoiceMessage}
+              />
+            </Box>
+            <TextField
+              fullWidth
+              multiline
+              rows={rows}
+              sx={{
+                marginLeft: 0
+              }}
+              maxRows={Infinity}
+              label="Type a message"
+              variant="outlined"
+              value={message}
+              onKeyDown={(ev) => {
+                if (ev.key === "Enter") {
+                  if (!ev.shiftKey) {
+                    handleSendMessage();
+                    ev.preventDefault();
+                  }
                 }
-              }
-            }}
-            onChange={(e) => setMessage(e.target.value)}
-            InputProps={{
-              endAdornment: (
-                <IconButton
-                  onClick={handleSendMessage}
-                  disabled={selectedThread?.loading}
-                >
-                  <SendIcon />
-                </IconButton>
-              ),
-            }}
-          />
+              }}
+              onChange={(e) => setMessage(e.target.value)}
+              InputProps={{
+                endAdornment: (
+                  <IconButton
+                    onClick={handleSendMessage}
+                    disabled={selectedThread?.loading || isRecordingVoiceMessage}
+                  >
+                    <SendIcon />
+                  </IconButton>
+                ),
+                style: {
+                  borderBottomLeftRadius: 0,
+                  borderTopLeftRadius: 0
+                }
+              }}
+            />
+          </Stack>
         )}
 
       </Box>
