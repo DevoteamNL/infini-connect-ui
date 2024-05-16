@@ -31,7 +31,7 @@ import Toolbar from "@mui/material/Toolbar";
 import { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
-import { Thread, useThreadContext } from "../../context/ThreadContext";
+import { Thread, useThreadContext } from "../../context/ThreadContext/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 
 const drawerWidth = 300;

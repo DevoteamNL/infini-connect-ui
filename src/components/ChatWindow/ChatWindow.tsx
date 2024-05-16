@@ -17,7 +17,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
-import { Role, Thread, useThreadContext } from "../../context/ThreadContext";
+import { Role, Thread, useThreadContext } from "../../context/ThreadContext/ThreadContext";
 import PluginSelector from "../PluginSelector/PluginSelector";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ChatAudioMessage } from './ChatAudioMessage';
