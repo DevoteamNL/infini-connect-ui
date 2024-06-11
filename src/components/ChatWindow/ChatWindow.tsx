@@ -21,6 +21,8 @@ import { Role, Thread, useThreadContext } from "../../context/ThreadContext/Thre
 import PluginSelector from "../PluginSelector/PluginSelector";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ChatAudioMessage } from './ChatAudioMessage';
+import { AlertBoxI } from '../AlertBox/AlertBox.types';
+import { AlertBox } from '../AlertBox/AlertBox';
 
 // Define the MainContentProps interface for the component's props
 interface MainContentProps {
@@ -110,9 +112,12 @@ const MainContent: React.FC<MainContentProps> = () => {
   >();
   const { postMessage, threads, selectedThreadId } = useThreadContext();
   const { darkMode } = useSettings();
+  const [alert, setAlert] = useState<AlertBoxI | null>(null);
+
   // State for the chat message and text field rows
   const [message, setMessage] = useState("");
-  const [isRecordingVoiceMessage, setRecordingVoiceMessage] = useState(false);
+  // For the voice message request sent to OpenAI
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
   const [rows, setRows] = useState(3);
   const selectedThread = threads.find((t) => t.id === selectedThreadId);
   const messages = selectedThread?.messages;
@@ -161,320 +166,338 @@ const MainContent: React.FC<MainContentProps> = () => {
 
   // Function to handle sending a message
   const handleSendMessage = () => {
-    if (!message || !selectedThread || selectedThread.loading || isRecordingVoiceMessage) return;
+    if (!message || !selectedThread || selectedThread.loading || isRecordingVoice) return;
 
     if (addingFeedback) {
       sendFeedback(addingFeedback);
       setAddingFeedback(undefined);
     } else {
-      postMessage(
-        selectedThread.id,
-        message,
-        selectedThread.newThread,
-        selectedThread.title,
-        plugin,
-      );
+      postMessage({
+        id: selectedThread.id,
+        message: message.trim(),
+        isNewThread: selectedThread.newThread,
+        title: selectedThread.title,
+        plugin
+      });
     }
     setMessage("");
   };
 
+  const isRecordingVoice = !!mediaRecorder;
+
   // JSX for the MainContent component
   return (
-    <Box
-      component="main"
-      sx={{
-        flexGrow: 1,
-        p: 3,
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        width: "100%",
-        paddingTop: "80px"
-      }}
-    >
-      <PluginSelector
-        plugin={selectedThread?.plugin || plugin}
-        onPluginChange={setPlugin}
-        disabled={selectedThread?.messages.some(
-          (message) => message.data.role === Role.USER,
-        )}
-      ></PluginSelector>
-      {messages?.length === 0 ? (
-        <Box
-          sx={{
-            flexGrow: 1,
-            textAlign: "center",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <Grid container>
-            <Grid item xs={12}>
-              <Typography variant="h6">Hi, how can I help you?</Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="body1">
-                I can help you with the following (Only for the Amsterdam
-                office):
-              </Typography>
-            </Grid>
-
+    <>{alert
+      ? <AlertBox
+        severity={alert.severity}
+        message={alert.message}
+      />
+      : null
+    }
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          width: "100%",
+          paddingTop: "80px"
+        }}
+      >
+        <PluginSelector
+          plugin={selectedThread?.plugin || plugin}
+          onPluginChange={setPlugin}
+          disabled={selectedThread?.messages.some(
+            (message) => message.data.role === Role.USER,
+          )}
+        ></PluginSelector>
+        {messages?.length === 0 ? (
+          <Box
+            sx={{
+              flexGrow: 1,
+              textAlign: "center",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
             <Grid container>
-              <Grid item xs={1}></Grid>
-              <Grid item xs={10}>
-                <div>
-                  <Accordion defaultExpanded>
-                    <AccordionSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel1a-content"
-                      id="panel1a-header"
-                    >
-                      <Typography>Find available desks</Typography>
-                    </AccordionSummary>
-                    <StyledAccordionDetails>
-                      <Typography>
-                        <b>Sample Question:</b> "Can you please find available
-                        dual monitor desks for next week Tuesday?"
-                      </Typography>
-                      <Typography>
-                        <b>Sample Question:</b> "find desk for tomorrow?"
-                      </Typography>
-                    </StyledAccordionDetails>
-                  </Accordion>
-
-                  <Accordion>
-                    <AccordionSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel2a-content"
-                      id="panel2a-header"
-                    >
-                      <Typography>Make a desk reservation</Typography>
-                    </AccordionSummary>
-                    <StyledAccordionDetails>
-                      <Typography>
-                        <b>Sample Question:</b> "Reserve dual desk monitor for
-                        tomorrow."
-                      </Typography>
-                    </StyledAccordionDetails>
-                  </Accordion>
-
-                  <Accordion>
-                    <AccordionSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel3a-content"
-                      id="panel3a-header"
-                    >
-                      <Typography>Get desk reservation details</Typography>
-                    </AccordionSummary>
-                    <StyledAccordionDetails>
-                      <Typography>
-                        <b>Sample Question:</b> "Do I have desk reserved for
-                        tomorrow?"
-                      </Typography>
-                      <Typography>
-                        <b>Sample Question:</b> "Who is coming to office
-                        tomorrow?"
-                      </Typography>
-                      <Typography>
-                        <b>Sample Question:</b> "Is Ratko coming to office
-                        tomorrow?"
-                      </Typography>
-                    </StyledAccordionDetails>
-                  </Accordion>
-
-                  <Accordion>
-                    <AccordionSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel4a-content"
-                      id="panel4a-header"
-                    >
-                      <Typography>Check available parking spots</Typography>
-                    </AccordionSummary>
-                    <StyledAccordionDetails>
-                      <Typography>
-                        <b>Sample Question:</b> "Any parking available for 5th
-                        of march?"
-                      </Typography>
-                    </StyledAccordionDetails>
-                  </Accordion>
-
-                  <Accordion>
-                    <AccordionSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel5a-content"
-                      id="panel5a-header"
-                    >
-                      <Typography>Make a parking reservation</Typography>
-                    </AccordionSummary>
-                    <StyledAccordionDetails>
-                      <Typography>
-                        <b>Sample Question:</b> "I need to reserve a parking
-                        spot for next Monday."
-                      </Typography>
-                    </StyledAccordionDetails>
-                  </Accordion>
-                </div>
+              <Grid item xs={12}>
+                <Typography variant="h6">Hi, how can I help you?</Typography>
               </Grid>
-              <Grid item xs={1}></Grid>
-            </Grid>
-          </Grid>
-        </Box>
-      ) : (
-        <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
-          <List>
-            {messages?.filter(msg => msg.data.content.length !== 0)
-              .map((msg) => (
-                <Message
-                  key={msg.id}
-                  sender={msg.data.role === Role.USER}
-                  message={msg.data.content}
-                  caption={msg.createdAt as string}
-                ></Message>
-              ))}
+              <Grid item xs={12}>
+                <Typography variant="body1">
+                  I can help you with the following (Only for the Amsterdam
+                  office):
+                </Typography>
+              </Grid>
 
-            {selectedThread?.replying ? (
-              <Message sender={false} caption="thinking..."></Message>
-            ) : addingFeedback ? (
-              <>
-                <Message
-                  sender={false}
-                  caption=""
-                  message={`Can you share a bit more info on what you ${{
-                    [FeedbackRating.NEUTRAL]: "think of",
-                    [FeedbackRating.BAD]: "dislike about",
-                    [FeedbackRating.GOOD]: "like about",
-                  }[addingFeedback]
-                    } the previous response or your general experience with the app?`}
-                ></Message>
+              <Grid container>
+                <Grid item xs={1}></Grid>
+                <Grid item xs={10}>
+                  <div>
+                    <Accordion defaultExpanded>
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        aria-controls="panel1a-content"
+                        id="panel1a-header"
+                      >
+                        <Typography>Find available desks</Typography>
+                      </AccordionSummary>
+                      <StyledAccordionDetails>
+                        <Typography>
+                          <b>Sample Question:</b> "Can you please find available
+                          dual monitor desks for next week Tuesday?"
+                        </Typography>
+                        <Typography>
+                          <b>Sample Question:</b> "find desk for tomorrow?"
+                        </Typography>
+                      </StyledAccordionDetails>
+                    </Accordion>
+
+                    <Accordion>
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        aria-controls="panel2a-content"
+                        id="panel2a-header"
+                      >
+                        <Typography>Make a desk reservation</Typography>
+                      </AccordionSummary>
+                      <StyledAccordionDetails>
+                        <Typography>
+                          <b>Sample Question:</b> "Reserve dual desk monitor for
+                          tomorrow."
+                        </Typography>
+                      </StyledAccordionDetails>
+                    </Accordion>
+
+                    <Accordion>
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        aria-controls="panel3a-content"
+                        id="panel3a-header"
+                      >
+                        <Typography>Get desk reservation details</Typography>
+                      </AccordionSummary>
+                      <StyledAccordionDetails>
+                        <Typography>
+                          <b>Sample Question:</b> "Do I have desk reserved for
+                          tomorrow?"
+                        </Typography>
+                        <Typography>
+                          <b>Sample Question:</b> "Who is coming to office
+                          tomorrow?"
+                        </Typography>
+                        <Typography>
+                          <b>Sample Question:</b> "Is Ratko coming to office
+                          tomorrow?"
+                        </Typography>
+                      </StyledAccordionDetails>
+                    </Accordion>
+
+                    <Accordion>
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        aria-controls="panel4a-content"
+                        id="panel4a-header"
+                      >
+                        <Typography>Check available parking spots</Typography>
+                      </AccordionSummary>
+                      <StyledAccordionDetails>
+                        <Typography>
+                          <b>Sample Question:</b> "Any parking available for 5th
+                          of march?"
+                        </Typography>
+                      </StyledAccordionDetails>
+                    </Accordion>
+
+                    <Accordion>
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        aria-controls="panel5a-content"
+                        id="panel5a-header"
+                      >
+                        <Typography>Make a parking reservation</Typography>
+                      </AccordionSummary>
+                      <StyledAccordionDetails>
+                        <Typography>
+                          <b>Sample Question:</b> "I need to reserve a parking
+                          spot for next Monday."
+                        </Typography>
+                      </StyledAccordionDetails>
+                    </Accordion>
+                  </div>
+                </Grid>
+                <Grid item xs={1}></Grid>
+              </Grid>
+            </Grid>
+          </Box>
+        ) : (
+          <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+            <List>
+              {messages?.filter(msg => msg.data.content.length !== 0)
+                .map((msg) => (
+                  <Message
+                    key={msg.id}
+                    sender={msg.data.role === Role.USER}
+                    message={msg.data.content}
+                    caption={msg.createdAt as string}
+                  ></Message>
+                ))}
+
+              {selectedThread?.replying ? (
+                <Message sender={false} caption="thinking..."></Message>
+              ) : addingFeedback ? (
+                <>
+                  <Message
+                    sender={false}
+                    caption=""
+                    message={`Can you share a bit more info on what you ${{
+                      [FeedbackRating.NEUTRAL]: "think of",
+                      [FeedbackRating.BAD]: "dislike about",
+                      [FeedbackRating.GOOD]: "like about",
+                    }[addingFeedback]
+                      } the previous response or your general experience with the app?`}
+                  ></Message>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    paddingX={2}
+                    justifyContent={"flex-end"}
+                  >
+                    <Button onClick={() => setAddingFeedback(undefined)}>
+                      Cancel feedback
+                    </Button>
+                  </Stack>
+                </>
+              ) : (
                 <Stack
                   direction="row"
                   spacing={1}
                   paddingX={2}
                   justifyContent={"flex-end"}
                 >
-                  <Button onClick={() => setAddingFeedback(undefined)}>
-                    Cancel feedback
-                  </Button>
-                </Stack>
-              </>
-            ) : (
-              <Stack
-                direction="row"
-                spacing={1}
-                paddingX={2}
-                justifyContent={"flex-end"}
-              >
-                <Button
-                  onClick={() => {
-                    setAddingFeedback(FeedbackRating.NEUTRAL);
-                    sendFeedback(FeedbackRating.NEUTRAL);
-                  }}
-                >
-                  How was this response?
-                </Button>
-
-                <IconButton
-                  onClick={() => {
-                    setAddingFeedback(FeedbackRating.BAD);
-                    sendFeedback(FeedbackRating.BAD);
-                  }}
-                >
-                  <ThumbDown />
-                </IconButton>
-                <IconButton
-                  onClick={() => {
-                    setAddingFeedback(FeedbackRating.GOOD);
-                    sendFeedback(FeedbackRating.GOOD);
-                  }}
-                >
-                  <ThumbUp />
-                </IconButton>
-              </Stack>
-            )}
-            <div ref={chatEndRef} />
-          </List>
-        </Box>
-      )}
-      <Box sx={{ mt: 1 }}>
-        {selectedThread?.error ? (
-          <Container>
-            <Error>
-              {selectedThread?.error}
-              <br />
-              <br />
-              Contact:{" "}
-              <a href="mailto:nl.infini.connect@devoteam.com">
-                nl.infini.connect
-              </a>
-              <br />
-
-            </Error>
-          </Container>
-        ) : (
-          <Stack
-            direction="row"
-          >
-            <Box
-              sx={{
-                border: `1px solid ${darkMode
-                  ? "rgba(255, 255, 255, 0.23)"
-                  : "rgba(0, 0, 0, 0.23)"
-                  }`,
-                borderRadius: 1,
-                borderRight: 0,
-                borderBottomRightRadius: 0,
-                borderTopRightRadius: 0,
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "center",
-                width: "3rem"
-              }}
-            >
-              <ChatAudioMessage
-                isRecordingVoiceMessage={isRecordingVoiceMessage}
-                setRecordingVoiceMessage={setRecordingVoiceMessage}
-              />
-            </Box>
-            <TextField
-              fullWidth
-              multiline
-              rows={rows}
-              sx={{
-                marginLeft: 0
-              }}
-              maxRows={Infinity}
-              label="Type a message"
-              variant="outlined"
-              value={message}
-              onKeyDown={(ev) => {
-                if (ev.key === "Enter") {
-                  if (!ev.shiftKey) {
-                    handleSendMessage();
-                    ev.preventDefault();
-                  }
-                }
-              }}
-              onChange={(e) => setMessage(e.target.value)}
-              InputProps={{
-                endAdornment: (
-                  <IconButton
-                    onClick={handleSendMessage}
-                    disabled={selectedThread?.loading || isRecordingVoiceMessage}
+                  <Button
+                    onClick={() => {
+                      setAddingFeedback(FeedbackRating.NEUTRAL);
+                      sendFeedback(FeedbackRating.NEUTRAL);
+                    }}
                   >
-                    <SendIcon />
-                  </IconButton>
-                ),
-                style: {
-                  borderBottomLeftRadius: 0,
-                  borderTopLeftRadius: 0
-                }
-              }}
-            />
-          </Stack>
-        )}
+                    How was this response?
+                  </Button>
 
+                  <IconButton
+                    onClick={() => {
+                      setAddingFeedback(FeedbackRating.BAD);
+                      sendFeedback(FeedbackRating.BAD);
+                    }}
+                  >
+                    <ThumbDown />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      setAddingFeedback(FeedbackRating.GOOD);
+                      sendFeedback(FeedbackRating.GOOD);
+                    }}
+                  >
+                    <ThumbUp />
+                  </IconButton>
+                </Stack>
+              )}
+              <div ref={chatEndRef} />
+            </List>
+          </Box>
+        )}
+        <Box sx={{ mt: 1 }}>
+          {selectedThread?.error ? (
+            <Container>
+              <Error>
+                {selectedThread?.error}
+                <br />
+                <br />
+                Contact:{" "}
+                <a href="mailto:nl.infini.connect@devoteam.com">
+                  nl.infini.connect
+                </a>
+                <br />
+
+              </Error>
+            </Container>
+          ) : (
+            <Stack
+              direction="row"
+            >
+              <Box
+                sx={{
+                  border: `1px solid ${darkMode
+                    ? "rgba(255, 255, 255, 0.23)"
+                    : "rgba(0, 0, 0, 0.23)"
+                    }`,
+                  borderRadius: 1,
+                  borderRight: 0,
+                  borderBottomRightRadius: 0,
+                  borderTopRightRadius: 0,
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  width: "3rem"
+                }}
+              >
+                <ChatAudioMessage
+                  mediaRecorder={mediaRecorder}
+                  setMediaRecorder={setMediaRecorder}
+                  selectedThread={selectedThread}
+                  plugin={plugin}
+                  setAlert={setAlert}
+                  alert={alert}
+                />
+              </Box>
+              <TextField
+                fullWidth
+                multiline
+                rows={rows}
+                sx={{
+                  marginLeft: 0
+                }}
+                maxRows={Infinity}
+                disabled={isRecordingVoice}
+                label={isRecordingVoice
+                  ? "Voice message is being recorded"
+                  : "Type a message"
+                }
+                variant="outlined"
+                value={message}
+                onKeyDown={(ev) => {
+                  if (ev.key === "Enter") {
+                    if (!ev.shiftKey) {
+                      handleSendMessage();
+                      ev.preventDefault();
+                    }
+                  }
+                }}
+                onChange={(e) => setMessage(e.target.value)}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton
+                      onClick={handleSendMessage}
+                      disabled={selectedThread?.loading || isRecordingVoice}
+                    >
+                      <SendIcon />
+                    </IconButton>
+                  ),
+                  style: {
+                    borderBottomLeftRadius: 0,
+                    borderTopLeftRadius: 0
+                  }
+                }}
+              />
+            </Stack>
+          )}
+
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 

@@ -8,14 +8,17 @@ import {
   useState,
 } from "react";
 import { useAuthContext } from "../AuthContext";
-import { threadReducer } from './ThreadContext.reducers';
+import { constructNewThread, threadReducer } from './ThreadContext.reducers';
 import {
   AiResponsePayload,
+  PostAudioMessage,
+  PostMessage,
   Role,
   StreamExtractedData,
   StreamMetadataTagName,
   Thread,
   ThreadContextProps,
+  UrlParams,
   UserRequestPayload
 } from './ThreadContext.types';
 import { NO_TEXT_YET, NO_THREAD_ID_YET } from './ThreadContext.constants';
@@ -69,17 +72,6 @@ const parseStreamedData = (
 
 // Create the thread context
 const ThreadContext = createContext<ThreadContextProps | undefined>(undefined);
-
-export const constructNewThread = (): Thread => {
-  return {
-    id: Math.random(),
-    messages: [],
-    loading: false,
-    error: null,
-    newThread: true,
-    replying: false
-  };
-};
 
 class FetchError extends Error {
   url: URL;
@@ -136,25 +128,46 @@ const ThreadProvider = ({
 
   createMetadataRegExs();
 
+  const getURL = (params: UrlParams): URL => {
+    const url = new URL(window.config.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "");
+    url.pathname = "api/thread/";
+    if (params.threadId) {
+      url.pathname += params.threadId + "/";
+    };
+    if (params.isAudio) {
+      url.pathname += "audio/";
+    }
+    if (params.isMessageEndpoint) {
+      url.pathname += "messages/";
+    }
+    return url;
+  };
+
+  // const authWebSocket = useCallback((params: UrlParams = {}) => {
+  //   const url = getWebSocketUrl(
+  //     getURL(params)
+  //   );
+  //   const socket = new WebSocket(url);
+  //   socket.onerror = (ev) => {
+  //     console.error(`socket error event: ${ev || ""}`);
+  //   };
+  //   const stream = new MediaStream();
+  //   socket.onopen = () => {
+  //     console.log("socket connection open");
+
+  //     socket.send(new Blob(stream));
+  //   };
+  // }, []);
+
   const authFetch = useCallback(
     async (
-      params: {
-        threadId?: number;
-        messagesEndpoint?: boolean;
-        options?: RequestInit;
-      } = {},
+      params: UrlParams = {},
     ) => {
       const expired = checkExpired();
       if (expired) {
         return;
       }
-      const url = new URL(window.config.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "");
-      url.pathname = "api/thread/";
-      if (params.threadId) {
-        url.pathname +=
-          params.threadId + "/" + (params.messagesEndpoint ? "messages" : "");
-      }
-
+      const url = getURL(params);
       const response = await fetch(url, {
         ...params.options,
         headers: {
@@ -338,29 +351,117 @@ const ThreadProvider = ({
     }
   };
 
-  // Post a message to a thread
-  const postMessage = useCallback(
-    async (
-      id: number,
-      message: string,
-      isNewThread?: boolean,
-      title?: string,
-      plugin?: string,
-    ) => {
-      const trimmedMessage = message.trim();
+  const postAudioMessage = useCallback(
+    async ({
+      id,
+      isNewThread,
+      audioBlob,
+      mimeType,
+      title,
+      plugin
+    }: PostAudioMessage) => {
+      try {
+        dispatch({
+          type: "ADD_CHAT_MESSAGE_REQUEST",
+          payload: {
+            threadId: id,
+            role: Role.USER,
+            messageId: Math.random(),
+            messageContent: "Sending audio...",
+          },
+        });
+        dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
+        const formData = new FormData();
+        formData.append("voiceMessage", audioBlob, `voiceMessage.${mimeType.extension}`);
+        if (plugin) {
+          formData.append("plugin", plugin);
+        }
+        const response = await authFetch({
+          threadId: isNewThread ? undefined : id,
+          isAudio: true,
+          isMessageEndpoint: !isNewThread,
+          options: {
+            method: "POST",
+            body: formData
+          },
+        });
+        if (!response) {
+          dispatch({
+            type: "SET_ERROR",
+            payload: { id, error: "Failed to fetch" },
+          });
+        }
 
+        const streamedBody = response?.body;
+        if (streamedBody) {
+          // TODO: create audio version (with the appropriate metadata)
+          // [[threadId]][[userMessageId]][[userMessageCreatedAt]]<chunks message do user>[[Role]]chunks...
+          dispatchExtractedStreamedData(streamedBody, "TEMP trimmedTitle", id);
+        } else {
+          throw new Error("Response is missing the streamed body");
+        }
+
+        // if (isNewThread) {
+
+        // } else {
+        //   try {
+        //     response = await authFetch({
+        //       threadId: id,
+        //       isMessageEndpoint: true,
+        //       options: {
+        //         method: "POST",
+        //         body: JSON.stringify({ text: message }),
+        //         headers: { "Content-Type": "application/json" },
+        //       },
+        //     });
+        //     if (!response) {
+        //       dispatch({
+        //         type: "SET_ERROR",
+        //         payload: { id, error: "Failed to fetch" },
+        //       });
+        //     }
+        //   } catch (err) {
+        //     dispatch({
+        //       type: "SET_ERROR",
+        //       payload: { id, error: "Failed to fetch" },
+        //     });
+        //   }
+        // }
+
+        // Copiar/adaptar postMessage()
+        // TODO: if (isNewThread) { route /threads/voice
+        // else /threads/voice/message
+      } catch (err) {
+        console.error(err);
+
+        dispatch({
+          type: "SET_ERROR",
+          payload: { id, error: "Failed to send voice message" },
+        });
+      }
+    }, []);
+
+  // Post a text message to a thread
+  const postMessage = useCallback(
+    async ({
+      id,
+      message,
+      isNewThread,
+      title,
+      plugin
+    }: PostMessage) => {
       dispatch({
         type: "ADD_CHAT_MESSAGE_REQUEST",
         payload: {
           threadId: id,
           role: Role.USER,
           messageId: Math.random(),
-          messageContent: trimmedMessage,
+          messageContent: message,
         },
       });
       dispatch({ type: "SET_LOADING", payload: { id, loading: true } });
 
-      const titleAux = title || trimmedMessage.substring(0, 20);
+      const titleAux = title || message.substring(0, 20);
       const trimmedTitle = titleAux.trim();
       let response: Response | undefined;
 
@@ -371,7 +472,7 @@ const ThreadProvider = ({
               method: "POST",
               body: JSON.stringify({
                 title: trimmedTitle,
-                message: trimmedMessage,
+                message,
                 plugin,
               }),
               headers: { "Content-Type": "application/json" }
@@ -390,10 +491,10 @@ const ThreadProvider = ({
         try {
           response = await authFetch({
             threadId: id,
-            messagesEndpoint: true,
+            isMessageEndpoint: true,
             options: {
               method: "POST",
-              body: JSON.stringify({ text: trimmedMessage }),
+              body: JSON.stringify({ text: message }),
               headers: { "Content-Type": "application/json" },
             },
           });
@@ -433,6 +534,7 @@ const ThreadProvider = ({
         createThread,
         deleteThread,
         postMessage,
+        postAudioMessage,
         setSelectedThread,
         renameThread,
       }}

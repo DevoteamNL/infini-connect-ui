@@ -1,4 +1,3 @@
-import { constructNewThread } from './ThreadContext';
 import { NO_NUMBER_YET, NO_TEXT_YET } from './ThreadContext.constants';
 import {
   Action,
@@ -31,6 +30,16 @@ const getFormattedDate = (createdAt = NO_TEXT_YET) => {
   return NO_TEXT_YET;
 };
 
+export const constructNewThread = (): Thread => {
+  return {
+    id: Math.random(),
+    messages: [],
+    loading: false,
+    error: null,
+    newThread: true,
+    replying: false
+  };
+};
 
 // Define the reducer function
 export const threadReducer = (state: Thread[], action: Action): Thread[] => {

@@ -1,3 +1,23 @@
+export interface PostMessage {
+  id: number;
+  message: string;
+  isNewThread?: boolean;
+  title?: string;
+  plugin?: string;
+}
+
+export interface PostAudioMessage {
+  audioBlob: Blob;
+  mimeType: {
+    extension: string;
+    type: string;
+  };
+  id: number;
+  isNewThread?: boolean;
+  title?: string;
+  plugin?: string;
+}
+
 export interface ThreadContextProps {
   threads: Thread[];
   loading: boolean;
@@ -11,13 +31,8 @@ export interface ThreadContextProps {
     title: string,
     newThread?: boolean,
   ) => Promise<void>;
-  postMessage: (
-    id: number,
-    message: string,
-    newThread?: boolean,
-    title?: string,
-    plugin?: string,
-  ) => Promise<void>;
+  postMessage: (params: PostMessage) => Promise<void>;
+  postAudioMessage: (params: PostAudioMessage) => Promise<void>;
   setSelectedThread: (id: number) => void;
 }
 
@@ -107,4 +122,11 @@ export interface StreamExtractedData {
   [StreamMetadataTagName.AI_MESSAGE_ID]?: number;
   messageContent?: string;
   [StreamMetadataTagName.AI_MESSAGE_CREATED_AT]?: string;
+}
+
+export interface UrlParams {
+  threadId?: number;
+  isMessageEndpoint?: boolean;
+  isAudio?: boolean;
+  options?: RequestInit;
 }
