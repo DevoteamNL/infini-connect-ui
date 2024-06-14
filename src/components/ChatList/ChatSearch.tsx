@@ -47,6 +47,10 @@ export const ChatSearch = ({
         if (threads[i].newThread) {
           newSearchableThreads.push([NEW_THREAD_SEARCH_CONTENT]);
         } else {
+          if (threads[i].title) {
+            // @ts-ignore
+            threadMessagesContent.push(threads[i].title.toLocaleLowerCase());
+          }
           for (const msg of threads[i].messages) {
             threadMessagesContent.push(msg.data.content.toLocaleLowerCase());
           }

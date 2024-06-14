@@ -110,7 +110,7 @@ const ChatHistoryDrawer = () => {
                   <Skeleton sx={{ flexGrow: 1, fontSize: "1rem" }} />
                 </ListItem>
               ))}
-              {threads.filter((it, idx) => (searchFilter.length === 0
+              {threads.filter((_it, idx) => (searchFilter.length === 0
                 || filteredThreadsIndexes.includes(idx)
               )).map((thread) => (
                 <ThreadItem key={thread.id} thread={thread} />
