@@ -91,7 +91,7 @@ export const ChatSearch = ({
               }
               for (const searchableThreadPart of searchableThread) {
                 if (searchableThreadPart.includes(searchFilterPart)) {
-                  if (!searchLogicalOperator || searchLogicalOperator === LogicalOperator.OR || searchFilter.length === 1) {
+                  if (searchFilter.length === 1 || searchLogicalOperator === LogicalOperator.OR) {
                     isIncluded = true;
                   } else {
                     andPartsFoundOnThread[i] = true;
