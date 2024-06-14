@@ -1,16 +1,10 @@
 import AddIcon from "@mui/icons-material/Add";
-import Brightness4Icon from "@mui/icons-material/Brightness4";
-import Brightness7Icon from "@mui/icons-material/Brightness7";
-import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
-  Avatar,
   Button,
   Container,
   Drawer,
   Fab,
-  ListItemButton,
-  Skeleton,
   styled,
 } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
@@ -18,18 +12,14 @@ import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import { useEffect, useState } from "react";
-import { useAuthContext } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
 import { useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
-import { ThreadItem } from "./ChatHistoryThreadItem";
 import { ChatSearch } from './ChatSearch';
+import { ChatThreadList } from './ChatThreadList';
+import { ChatHistoryFooter } from './ChatHistoryFooter';
 
 const drawerWidth = 300;
 
@@ -47,9 +37,8 @@ const Error = styled("div")(({ theme }) => ({
 }));
 
 const ChatHistoryDrawer = () => {
-  const { logout, profile } = useAuthContext();
-  const { darkMode, toggleDarkMode } = useSettings();
-  const { threads, listThreads, createThread, loading, error } =
+  const { darkMode } = useSettings();
+  const { listThreads, createThread, error } =
     useThreadContext();
   // result of the search input filtering
   const [filteredThreadsIndexes, setFilteredThreadsIndexes] = useState<number[]>([]);
@@ -104,18 +93,10 @@ const ChatHistoryDrawer = () => {
               searchFilter={searchFilter}
               filteredThreadsIndexes={filteredThreadsIndexes}
             />
-            <List>
-              {[...Array(loading ? 4 : 0)].map((_, index) => (
-                <ListItem key={index}>
-                  <Skeleton sx={{ flexGrow: 1, fontSize: "1rem" }} />
-                </ListItem>
-              ))}
-              {threads.filter((_it, idx) => (searchFilter.length === 0
-                || filteredThreadsIndexes.includes(idx)
-              )).map((thread) => (
-                <ThreadItem key={thread.id} thread={thread} />
-              ))}
-            </List>
+            <ChatThreadList
+              searchFilter={searchFilter}
+              filteredThreadsIndexes={filteredThreadsIndexes}
+            />
           </>
 
         )}
@@ -124,27 +105,7 @@ const ChatHistoryDrawer = () => {
       <Divider />
       <Box>
         <Divider />
-        <List>
-          <ListItem disablePadding>
-            <ListItemButton onClick={toggleDarkMode}>
-              <ListItemIcon>
-                {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-              </ListItemIcon>
-              <ListItemText primary={darkMode ? "Light mode" : "Dark mode"} />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton onClick={logout}>
-              <ListItemIcon>
-                <LogoutIcon />
-              </ListItemIcon>
-              <ListItemText primary="Logout" />
-              <ListItemIcon>
-                <Avatar src={profile?.picture} />
-              </ListItemIcon>
-            </ListItemButton>
-          </ListItem>
-        </List>
+        <ChatHistoryFooter />
       </Box>
     </Box>
   );
