@@ -1,38 +1,25 @@
-import { Delete, MoreHoriz } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
-import Brightness4Icon from "@mui/icons-material/Brightness4";
-import Brightness7Icon from "@mui/icons-material/Brightness7";
-import DriveFileRenameIcon from "@mui/icons-material/DriveFileRenameOutlineSharp";
-import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
-  Avatar,
   Button,
   Container,
   Drawer,
   Fab,
-  ListItemButton,
-  Menu,
-  MenuItem,
-  Skeleton,
   styled,
-  TextField,
 } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
-import { useEffect, useRef, useState } from "react";
-import { useAuthContext } from "../../context/AuthContext";
+import { useEffect, useState } from "react";
 import { useSettings } from "../../context/SettingsContext";
-import { Thread, useThreadContext } from "../../context/ThreadContext";
+import { useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
+import { ChatSearch } from './ChatSearch';
+import { ChatThreadList } from './ChatThreadList';
+import { ChatHistoryFooter } from './ChatHistoryFooter';
 
 const drawerWidth = 300;
 
@@ -49,93 +36,14 @@ const Error = styled("div")(({ theme }) => ({
   flexDirection: "column",
 }));
 
-const RenameText = styled(TextField)(({ theme }) => ({
-  paddingBlock: theme.spacing(1),
-  paddingInline: theme.spacing(2),
-}));
-
-const ThreadItem = ({ thread }: { thread: Thread }) => {
-  const [renaming, setRenaming] = useState(false);
-  const [newTitle, setNewTitle] = useState(thread.title || "New Chat");
-  const { setSelectedThread, selectedThreadId, deleteThread, renameThread } =
-    useThreadContext();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  return (
-    <ListItem
-      key={thread.id}
-      disablePadding
-      secondaryAction={
-        <IconButton edge="end" onClick={handleClick} disabled={thread.loading}>
-          <MoreHoriz />
-        </IconButton>
-      }
-    >
-      {renaming ? (
-        <RenameText
-          variant="standard"
-          value={newTitle}
-          onChange={(event) => setNewTitle(event.target.value)}
-          inputRef={inputRef}
-          onBlur={() => {
-            setRenaming(false);
-            renameThread(thread.id, newTitle, thread.newThread);
-          }}
-          onKeyDown={(ev) => {
-            if (ev.key === "Enter") {
-              (ev.target as HTMLElement).blur();
-            }
-          }}
-        />
-      ) : (
-        <ListItemButton
-          onClick={() => setSelectedThread(thread.id)}
-          selected={selectedThreadId === thread.id}
-        >
-          <ListItemText primary={thread.title || "New Chat"} />
-        </ListItemButton>
-      )}
-      <Menu anchorEl={anchorEl} onClose={() => handleClose()} open={open}>
-        <MenuItem
-          onClick={() => {
-            deleteThread(thread.id, thread.newThread);
-            handleClose();
-          }}
-        >
-          <Delete sx={{ marginRight: 1 }} />
-          Delete
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            setRenaming(true);
-            setTimeout(() => {
-              inputRef.current?.focus();
-              inputRef.current?.select();
-            });
-            handleClose();
-          }}
-        >
-          <DriveFileRenameIcon sx={{ marginRight: 1 }} />
-          Rename
-        </MenuItem>
-      </Menu>
-    </ListItem>
-  );
-};
-
 const ChatHistoryDrawer = () => {
-  const { logout, profile } = useAuthContext();
-  const { threads, listThreads, createThread, loading, error } =
+  const { darkMode } = useSettings();
+  const { listThreads, createThread, error } =
     useThreadContext();
-  const { darkMode, toggleDarkMode } = useSettings();
+  // result of the search input filtering
+  const [filteredThreadsIndexes, setFilteredThreadsIndexes] = useState<number[]>([]);
+  // search input (split, if a logical operator was used)
+  const [searchFilter, setSearchFilter] = useState<string[]>([]);
 
   useEffect(() => {
     listThreads();
@@ -178,43 +86,26 @@ const ChatHistoryDrawer = () => {
             </Error>
           </Container>
         ) : (
-          <List>
-            {[...Array(loading ? 4 : 0)].map((_, index) => (
-              <ListItem key={index}>
-                <Skeleton sx={{ flexGrow: 1, fontSize: "1rem" }} />
-              </ListItem>
-            ))}
-            {threads.map((thread) => (
-              <ThreadItem key={thread.id} thread={thread} />
-            ))}
-          </List>
+          <>
+            <ChatSearch
+              setFilteredThreadsIndexes={setFilteredThreadsIndexes}
+              setSearchFilter={setSearchFilter}
+              searchFilter={searchFilter}
+              filteredThreadsIndexes={filteredThreadsIndexes}
+            />
+            <ChatThreadList
+              searchFilter={searchFilter}
+              filteredThreadsIndexes={filteredThreadsIndexes}
+            />
+          </>
+
         )}
       </Box>
       <Box flexGrow={1} />
       <Divider />
       <Box>
         <Divider />
-        <List>
-          <ListItem disablePadding>
-            <ListItemButton onClick={toggleDarkMode}>
-              <ListItemIcon>
-                {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-              </ListItemIcon>
-              <ListItemText primary={darkMode ? "Light mode" : "Dark mode"} />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton onClick={logout}>
-              <ListItemIcon>
-                <LogoutIcon />
-              </ListItemIcon>
-              <ListItemText primary="Logout" />
-              <ListItemIcon>
-                <Avatar src={profile?.picture} />
-              </ListItemIcon>
-            </ListItemButton>
-          </ListItem>
-        </List>
+        <ChatHistoryFooter />
       </Box>
     </Box>
   );
