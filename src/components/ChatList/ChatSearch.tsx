@@ -112,7 +112,7 @@ export const ChatSearch = ({
 
   const handleSearchOnChange = useCallback((event: { target: { value: string; }; }) => {
     const { value } = event.target;
-    const trimmedValue = value.trim();
+    const trimmedValue = value.trim().toLocaleLowerCase();
     if (trimmedValue.length > 0) {
       let logicalOperatorOnSearch;
       for (const logicalOperator of logicalOperators) {
