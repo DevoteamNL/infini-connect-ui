@@ -1,10 +1,8 @@
-import AddIcon from "@mui/icons-material/Add";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
   Button,
   Container,
   Drawer,
-  Fab,
   styled,
 } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
@@ -14,12 +12,13 @@ import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Toolbar from "@mui/material/Toolbar";
 import { useEffect, useState } from "react";
-import { useSettings } from "../../context/SettingsContext";
 import { useThreadContext } from "../../context/ThreadContext";
 import ChatWindow from "../ChatWindow/ChatWindow";
 import { ChatSearch } from './ChatSearch';
 import { ChatThreadList } from './ChatThreadList';
 import { ChatHistoryFooter } from './ChatHistoryFooter';
+import { NewChatButton } from './NewChatButton';
+import { ChatHistoryToolbar } from './ChatHistoryToolbar';
 
 const drawerWidth = 300;
 
@@ -37,9 +36,7 @@ const Error = styled("div")(({ theme }) => ({
 }));
 
 const ChatHistoryDrawer = () => {
-  const { darkMode } = useSettings();
-  const { listThreads, createThread, error } =
-    useThreadContext();
+  const { listThreads, error } = useThreadContext();
   // result of the search input filtering
   const [filteredThreadsIndexes, setFilteredThreadsIndexes] = useState<number[]>([]);
   // search input (split, if a logical operator was used)
@@ -52,23 +49,10 @@ const ChatHistoryDrawer = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Box sx={{ overflowY: "auto", flexGrow: 1 }}>
-        <Toolbar>
-          <img
-            src={`/static/images/devoteam_rgb${darkMode ? "_white" : ""}.png`}
-            alt="logo"
-            height="50px"
-          />
-        </Toolbar>
+        <ChatHistoryToolbar />
         <Divider />
         <Box sx={{ p: 2 }}>
-          <Fab
-            variant="extended"
-            color="primary"
-            onClick={() => createThread()}
-          >
-            <AddIcon sx={{ mr: 1 }} />
-            New Chat
-          </Fab>
+          <NewChatButton />
         </Box>
         <Divider />
         {error ? (
