@@ -1,9 +1,12 @@
 import {
   Box,
+  IconButton,
+  InputAdornment,
   TextField,
   Tooltip,
 } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import { useCallback, useEffect, useRef, useState } from "react";
 import PropTypes from 'prop-types';
 import { useThreadContext } from "../../context/ThreadContext";
 
@@ -33,6 +36,7 @@ export const ChatSearch = ({
   const [searchableThreads, setSearchableThreads] = useState<string[][]>();
   // AND or OR or undefined
   const [searchLogicalOperator, setSearchLogicalOperator] = useState<LogicalOperatorT>();
+  const searchInput = useRef(null);
 
   useEffect(() => {
     listThreads();
@@ -110,6 +114,15 @@ export const ChatSearch = ({
     }
   }, [searchFilter, searchLogicalOperator, searchableThreads, setFilteredThreadsIndexes, threads]);
 
+  const clearSearchInputState = useCallback(() => {
+    if (searchFilter.length > 0) {
+      setSearchFilter([]);
+    }
+    if (searchLogicalOperator) {
+      setSearchLogicalOperator(undefined);
+    }
+  }, [setSearchFilter, setSearchLogicalOperator, searchLogicalOperator, searchFilter]);
+
   const handleSearchOnChange = useCallback((event: { target: { value: string; }; }) => {
     const { value } = event.target;
     const trimmedValue = value.trim().toLocaleLowerCase();
@@ -132,14 +145,15 @@ export const ChatSearch = ({
         setSearchLogicalOperator(logicalOperatorOnSearch);
       }
     } else {
-      if (searchFilter.length > 0) {
-        setSearchFilter([]);
-      }
-      if (searchLogicalOperator) {
-        setSearchLogicalOperator(undefined);
-      }
+      clearSearchInputState();
     }
-  }, [setSearchFilter, searchFilter, searchLogicalOperator, setSearchLogicalOperator]);
+  }, [setSearchFilter, searchFilter, searchLogicalOperator, setSearchLogicalOperator, clearSearchInputState]);
+
+  const handleClickClearText = useCallback(() => {
+    // @ts-ignore
+    searchInput.current.value = "";
+    clearSearchInputState();
+  }, [clearSearchInputState]);
 
   return (
     <Box
@@ -156,8 +170,22 @@ export const ChatSearch = ({
           label="Search"
           type="search"
           size="small"
+          inputRef={searchInput}
           disabled={loading || !searchableThreads || searchableThreads.length === 0}
           onChange={handleSearchOnChange}
+          InputProps={{
+            endAdornment: <InputAdornment position="end">
+              <IconButton
+                aria-label="clear inserted text"
+                onClick={handleClickClearText}
+                onMouseDown={handleClickClearText}
+                edge="end"
+              >
+                <CancelOutlinedIcon
+                />
+              </IconButton>
+            </InputAdornment>,
+          }}
         />
       </Tooltip>
     </Box>
