@@ -162,7 +162,9 @@ export const ChatSearch = ({
       sx={{
         width: "100%",
         justifyContent: "center",
-        marginTop: "0.5rem"
+        marginTop: "0.5rem",
+        paddingLeft: "16px",
+        paddingRight: "16px"
       }}
     >
       <Tooltip title="Optional use of OR or AND">
