@@ -170,7 +170,7 @@ export const ChatSearch = ({
       <Tooltip title="Optional use of OR or AND">
         <TextField
           label="Search"
-          type="search"
+          type="text"
           size="small"
           inputRef={searchInput}
           disabled={loading || !searchableThreads || searchableThreads.length === 0}
