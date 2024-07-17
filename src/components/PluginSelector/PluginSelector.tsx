@@ -33,7 +33,7 @@ export default function PluginSelector({
 }) {
   const [wereFetched, setWereFetched] = React.useState(false);
   const [plugins, setPlugins] = React.useState<
-    { displayName: string; name: string }[]
+    { displayName: string; name: string; }[]
   >([]);
 
   const { credential, checkExpired } = useAuthContext();
@@ -55,7 +55,12 @@ export default function PluginSelector({
         throw new Error("Failed to fetch");
       }
       response.json().then((data) => {
-        setPlugins(data);
+        if (data.length > 0) {
+          setPlugins(data);
+          if (data.length === 1) {
+            onPluginChange(data[0].name);
+          }
+        }
         setWereFetched(true);
       });
     });
@@ -67,7 +72,7 @@ export default function PluginSelector({
         <FormControl sx={{ m: 1, width: 300 }}>
           <InputLabel id="demo-multiple-chip-label">Plugin</InputLabel>
           <Select
-            disabled={disabled || !wereFetched}
+            disabled={plugins.length === 0 || disabled || !wereFetched}
             labelId="demo-multiple-chip-label"
             id="demo-multiple-chip"
             value={plugin}
