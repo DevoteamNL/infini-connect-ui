@@ -31,6 +31,7 @@ export default function PluginSelector({
   plugin: string;
   onPluginChange: (plugin: string) => void;
 }) {
+  const [wereFetched, setWereFetched] = React.useState(false);
   const [plugins, setPlugins] = React.useState<
     { displayName: string; name: string }[]
   >([]);
@@ -39,7 +40,7 @@ export default function PluginSelector({
 
   React.useEffect(() => {
     const expired = checkExpired();
-    if (expired) {
+    if (expired || wereFetched) {
       return;
     }
     const url = new URL(window.config.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "");
@@ -55,9 +56,10 @@ export default function PluginSelector({
       }
       response.json().then((data) => {
         setPlugins(data);
+        setWereFetched(true);
       });
     });
-  }, [checkExpired, credential?.credential]);
+  }, [checkExpired, credential?.credential, wereFetched, setWereFetched]);
 
   return (
     <Box>
@@ -65,7 +67,7 @@ export default function PluginSelector({
         <FormControl sx={{ m: 1, width: 300 }}>
           <InputLabel id="demo-multiple-chip-label">Plugin</InputLabel>
           <Select
-            disabled={disabled}
+            disabled={disabled || !wereFetched}
             labelId="demo-multiple-chip-label"
             id="demo-multiple-chip"
             value={plugin}
