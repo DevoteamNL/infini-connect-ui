@@ -88,7 +88,9 @@ export default function PluginSelector({
             )}
             MenuProps={MenuProps}
           >
-            {plugins.map(({ displayName, name }) => (
+            {plugins
+              .sort((a, b) => a.displayName.toLowerCase() > b.displayName.toLowerCase() ? 1 : -1)
+              .map(({ displayName, name }) => (
               <MenuItem key={name} value={name}>
                 {displayName}
               </MenuItem>
