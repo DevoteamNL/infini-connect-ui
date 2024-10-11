@@ -38,6 +38,7 @@ on:
   workflow_run:
     workflows: ['Build and Push to ACR']
     types: [completed]
+  workflow_dispatch: # This allows manual triggering
 
 env:
   RESOURCE_GROUP: "inficonnectrg"
